@@ -1,10 +1,12 @@
 import TopNav from "../components/TopNav";
+import SwapBox from "../components/SwapBox";
 
 const SwapView = () => {
     return (
-        <div>
+        <>
             <TopNav />
-        </div>
+            <SwapBox />
+        </>
     );
 };
 

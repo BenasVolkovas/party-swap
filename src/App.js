@@ -50,6 +50,9 @@ const theme = createTheme({
             main: "#f765a3",
             dark: "#dc5a91",
         },
+        background: {
+            default: "#fafafa",
+        },
     },
     spacing: (factor) => `${1 * factor}rem`,
 
