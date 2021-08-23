@@ -28,10 +28,22 @@ const useStyles = makeStyles((theme) => ({
     },
     title: {
         fontFamily: ["Kodchasan", "sans-serif"].join(","),
-        flex: 1,
         marginLeft: theme.spacing(1.5),
+        color: theme.blackColor.color,
+        display: "none",
+        flexGrow: 1,
+        [theme.breakpoints.up("sm")]: {
+            display: "block",
+        },
+    },
+    logoContainer: {
+        flexGrow: 1,
+        [theme.breakpoints.up("sm")]: {
+            flexGrow: 0,
+        },
     },
     logo: {
+        height: theme.spacing(4),
         width: theme.spacing(4),
     },
 }));
@@ -85,7 +97,9 @@ const TopNav = () => {
             <AppBar className={classes.root}>
                 <Toolbar>
                     {/* Brand name */}
-                    <img src={Logo} alt="logo" className={classes.logo} />
+                    <div className={classes.logoContainer}>
+                        <img src={Logo} alt="logo" className={classes.logo} />
+                    </div>
                     <Typography variant="h4" className={classes.title}>
                         PartySwap
                     </Typography>

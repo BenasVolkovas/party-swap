@@ -49,10 +49,14 @@ const theme = createTheme({
             light: "#fa98c2",
             main: "#f765a3",
             dark: "#dc5a91",
+            contrastText: "#ffffff",
         },
         background: {
             default: "#fafafa",
         },
+    },
+    shape: {
+        borderRadius: 20,
     },
     spacing: (factor) => `${1 * factor}rem`,
 
@@ -66,7 +70,7 @@ const theme = createTheme({
         color: "#dcdcdc",
     },
     lightGrayColor: {
-        color: "#f5f5f5",
+        color: "#fafafa",
     },
     themeColor: {
         color: "#f765a3",
