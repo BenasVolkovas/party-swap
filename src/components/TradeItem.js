@@ -1,7 +1,11 @@
+import { useState } from "react";
 import { makeStyles } from "@material-ui/core/styles";
 import Paper from "@material-ui/core/Paper";
 import Typography from "@material-ui/core/Typography";
 import Input from "@material-ui/core/Input";
+import Button from "@material-ui/core/Button";
+
+import TokenSelect from "./TokenSelect";
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -13,9 +17,12 @@ const useStyles = makeStyles((theme) => ({
     sideTitle: {},
     bottomDetails: {
         padding: theme.spacing(1.2, 1.6),
+        display: "flex",
+        flexDirection: "row",
     },
     amountInput: {
         fontSize: theme.spacing(1.6),
+        flexGrow: 1,
         "& > ::-webkit-outer-spin-button": {
             "-webkit-appearance": "none",
             margin: 0,
@@ -28,9 +35,13 @@ const useStyles = makeStyles((theme) => ({
             "-moz-appearance": "textfield",
         },
     },
+    selectedToken: {
+        display: "flex",
+        flexDirection: "row",
+    },
 }));
 
-const TradeItem = ({ side }) => {
+const TradeItem = ({ side, handleTokenSelectOpen }) => {
     const classes = useStyles();
 
     return (
@@ -48,6 +59,17 @@ const TradeItem = ({ side }) => {
                     placeholder="0.0"
                     className={classes.amountInput}
                 />
+                <Button
+                    button
+                    elevation={0}
+                    variant="outlined"
+                    className={classes.selectedToken}
+                    onClick={() => handleTokenSelectOpen()}
+                >
+                    <div>1</div>
+                    <div>2</div>
+                    <div>3</div>
+                </Button>
             </div>
         </Paper>
     );

@@ -1,5 +1,7 @@
+import { useState, useEffect } from "react";
 import { useMoralis } from "react-moralis";
 import { makeStyles } from "@material-ui/core/styles";
+import axios from "axios";
 
 import Paper from "@material-ui/core/Paper";
 import Container from "@material-ui/core/Container";
@@ -13,10 +15,10 @@ import Input from "@material-ui/core/Input";
 import SwapVertIcon from "@material-ui/icons/SwapVert";
 
 import TradeItem from "./TradeItem";
-
+import TokenSelect from "./TokenSelect";
 const useStyles = makeStyles((theme) => ({
     rootBox: {
-        marginTop: theme.spacing(5),
+        marginTop: theme.spacing(10),
     },
     actionPart: {
         padding: theme.spacing(1.5),
@@ -45,49 +47,91 @@ const useStyles = makeStyles((theme) => ({
 }));
 const SwapBox = () => {
     const { authenticate, isAuthenticated } = useMoralis();
+    const [tokens, setTokens] = useState({});
+    const [openSelect, setOpenSelect] = useState(false);
     const classes = useStyles();
 
+    const handleTokenSelectOpen = () => {
+        setOpenSelect(true);
+    };
+
+    const handleTokenSelectClose = () => {
+        setOpenSelect(false);
+    };
+
+    useEffect(() => {
+        axios({
+            method: "get",
+            url: "https://api.1inch.exchange/v3.0/1/tokens",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            xsrfCookieName: "XSRF-TOKEN",
+            xsrfHeaderName: "X-XSRF-TOKEN",
+        }).then((response) => {
+            const data = response.data;
+            setTokens(data.tokens);
+        });
+    }, []);
+
     return (
-        <Container maxWidth="sm">
-            <Paper elevation={3} className={classes.rootBox}>
-                <Typography variant="h5" className={classes.title}>
-                    Keitykla
-                </Typography>
-                <Divider />
+        <>
+            <Container maxWidth="sm">
+                <Paper elevation={3} className={classes.rootBox}>
+                    <Typography variant="h5" className={classes.title}>
+                        Keitykla
+                    </Typography>
+                    <Divider />
 
-                <div className={classes.actionPart}>
-                    <TradeItem side="from" />
-                    <div className={classes.switchButtonContainer}>
-                        <IconButton
-                            color="primary"
-                            className={classes.switchButton}
-                        >
-                            <SwapVertIcon className={classes.switchIcon} />
-                        </IconButton>
+                    <div className={classes.actionPart}>
+                        <TradeItem
+                            side="from"
+                            handleTokenSelectOpen={() =>
+                                handleTokenSelectOpen()
+                            }
+                        />
+                        <div className={classes.switchButtonContainer}>
+                            <IconButton
+                                color="primary"
+                                className={classes.switchButton}
+                            >
+                                <SwapVertIcon className={classes.switchIcon} />
+                            </IconButton>
+                        </div>
+                        <TradeItem
+                            side="to"
+                            handleTokenSelectOpen={() =>
+                                handleTokenSelectOpen()
+                            }
+                        />
+
+                        {isAuthenticated ? (
+                            <Button
+                                variant="contained"
+                                color="primary"
+                                className={classes.button}
+                            >
+                                Keisti
+                            </Button>
+                        ) : (
+                            <Button
+                                variant="contained"
+                                color="primary"
+                                className={classes.button}
+                                onClick={() => authenticate()}
+                            >
+                                Prisijungti su pinigine
+                            </Button>
+                        )}
                     </div>
-                    <TradeItem side="to" />
-
-                    {isAuthenticated ? (
-                        <Button
-                            variant="contained"
-                            color="primary"
-                            className={classes.button}
-                        >
-                            Keisti
-                        </Button>
-                    ) : (
-                        <Button
-                            variant="contained"
-                            color="primary"
-                            className={classes.button}
-                            onClick={() => authenticate()}
-                        >
-                            Prisijungti su pinigine
-                        </Button>
-                    )}
-                </div>
-            </Paper>
-        </Container>
+                </Paper>
+            </Container>
+            <TokenSelect
+                open={openSelect}
+                tokens={tokens}
+                handleTokenSelectClose={() => handleTokenSelectClose()}
+            />
+        </>
     );
 };
 
