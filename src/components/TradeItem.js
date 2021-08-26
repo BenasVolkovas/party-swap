@@ -60,8 +60,6 @@ const TradeItem = ({ side, handleTokenSelectOpen }) => {
                     className={classes.amountInput}
                 />
                 <Button
-                    button
-                    elevation={0}
                     variant="outlined"
                     className={classes.selectedToken}
                     onClick={() => handleTokenSelectOpen()}

@@ -128,7 +128,7 @@ const SwapBox = () => {
             </Container>
             <TokenSelect
                 open={openSelect}
-                tokens={tokens}
+                tokens={Object.values(tokens)}
                 handleTokenSelectClose={() => handleTokenSelectClose()}
             />
         </>

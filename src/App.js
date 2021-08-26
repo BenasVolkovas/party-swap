@@ -7,7 +7,6 @@ const theme = createTheme({
         fontSize: 14,
         htmlFontSize: 10,
         fontFamily: ["Nunito", "sans-serif"].join(","),
-        color: "#323232",
         h1: {
             fontSize: "4rem",
             fontWeight: 400,
