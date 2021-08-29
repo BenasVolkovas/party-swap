@@ -3,6 +3,7 @@ import { useMoralis } from "react-moralis";
 import { makeStyles } from "@material-ui/core/styles";
 import axios from "axios";
 
+import Backdrop from "@material-ui/core/Backdrop";
 import Paper from "@material-ui/core/Paper";
 import Container from "@material-ui/core/Container";
 import Typography from "@material-ui/core/Typography";
@@ -48,11 +49,14 @@ const useStyles = makeStyles((theme) => ({
 const SwapBox = () => {
     const { authenticate, isAuthenticated } = useMoralis();
     const [tokens, setTokens] = useState({});
+    const [loading, setLoading] = useState(false);
     const [openSelect, setOpenSelect] = useState(false);
+    const [openedSide, setOpenedSide] = useState("");
     const classes = useStyles();
 
-    const handleTokenSelectOpen = () => {
+    const handleTokenSelectOpen = (side) => {
         setOpenSelect(true);
+        setOpenedSide(side);
     };
 
     const handleTokenSelectClose = () => {
@@ -128,6 +132,7 @@ const SwapBox = () => {
             </Container>
             <TokenSelect
                 open={openSelect}
+                side={openedSide}
                 tokens={Object.values(tokens)}
                 handleTokenSelectClose={() => handleTokenSelectClose()}
             />

@@ -62,7 +62,7 @@ const TradeItem = ({ side, handleTokenSelectOpen }) => {
                 <Button
                     variant="outlined"
                     className={classes.selectedToken}
-                    onClick={() => handleTokenSelectOpen()}
+                    onClick={() => handleTokenSelectOpen(side)}
                 >
                     <div>1</div>
                     <div>2</div>

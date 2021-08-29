@@ -15,9 +15,13 @@ import Divider from "@material-ui/core/Divider";
 import IconButton from "@material-ui/core/IconButton";
 import TextField from "@material-ui/core/TextField";
 import InputAdornment from "@material-ui/core/InputAdornment";
+import Backdrop from "@material-ui/core/Backdrop";
+import CircularProgress from "@material-ui/core/CircularProgress";
 
 import CloseIcon from "@material-ui/icons/Close";
 import SearchIcon from "@material-ui/icons/Search";
+
+import TokensSearch from "./TokensSearch";
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -62,93 +66,117 @@ const useStyles = makeStyles((theme) => ({
         height: "100%",
         overflowY: "auto",
     },
+    tokenLogo: {
+        width: "100%",
+        height: "100%",
+    },
+    backdrop: {
+        zIndex: theme.zIndex.modal + 1,
+        color: "#fff",
+    },
 }));
 
-const TokenSelect = ({ open, tokens, handleTokenSelectClose }) => {
+const TokenSelect = ({ open, side, tokens, handleTokenSelectClose }) => {
+    const [loading, setLoading] = useState(true);
     const [searchTokens, setSearchTokens] = useState(tokens);
-    const [search, setSearch] = useState("");
     const classes = useStyles();
 
     useEffect(() => {
-        // temp
-        setSearchTokens(tokens.slice(0, 10));
-        console.log(tokens);
+        if (loading) {
+            setLoading(false);
+        }
+    });
 
-        // testing
-        tokens = tokens.filter((token) => token.symbol.length === 5);
-        console.log(tokens);
-    }, [search]);
+    useEffect(() => {
+        console.log(side);
+        setSearchTokens(tokens.slice(0, 50));
+    }, [tokens]);
 
-    const updateSearch = (e) => {
-        setSearch(e.target.value);
+    const searchForTokens = (search) => {
+        setLoading(true);
+
+        const lowerSearch = search.toLowerCase();
+        setSearchTokens(
+            tokens.filter((token) => {
+                return token.symbol.toLowerCase().includes(lowerSearch) ||
+                    token.name.toLowerCase().includes(lowerSearch) ||
+                    token.address.toLowerCase().includes(lowerSearch)
+                    ? token
+                    : null;
+            })
+        );
     };
 
     return (
-        <Modal
-            open={open}
-            onClose={() => handleTokenSelectClose()}
-            className={classes.root}
-        >
-            <Container maxWidth="sm">
-                <Paper className={classes.paper}>
-                    <div className={classes.topContainer}>
-                        <div className={classes.titleAndClose}>
-                            <Typography variant="h5" className={classes.title}>
-                                Pasirinkite kriptovaliutą
-                            </Typography>
-                            <IconButton
-                                color="primary"
-                                onClick={() => handleTokenSelectClose()}
-                                className={classes.closeButton}
-                            >
-                                <CloseIcon className={classes.closeIcon} />
-                            </IconButton>
+        <>
+            <Backdrop className={classes.backdrop} open={loading}>
+                <CircularProgress />
+            </Backdrop>
+            <Modal
+                open={open}
+                onClose={() => handleTokenSelectClose()}
+                className={classes.root}
+            >
+                <Container maxWidth="sm">
+                    <Paper className={classes.paper}>
+                        <div className={classes.topContainer}>
+                            <div className={classes.titleAndClose}>
+                                <Typography
+                                    variant="h5"
+                                    className={classes.title}
+                                >
+                                    Pasirinkite kriptovaliutą
+                                </Typography>
+                                <IconButton
+                                    color="primary"
+                                    onClick={() => handleTokenSelectClose()}
+                                    className={classes.closeButton}
+                                >
+                                    <CloseIcon className={classes.closeIcon} />
+                                </IconButton>
+                            </div>
+                            <Divider />
+                            <div className={classes.search}>
+                                <TokensSearch
+                                    searchForTokens={(search) =>
+                                        searchForTokens(search)
+                                    }
+                                />
+                            </div>
                         </div>
-                        <Divider />
-                        <div className={classes.search}>
-                            <TextField
-                                fullWidth
-                                variant="outlined"
-                                placeholder="Paieška…"
-                                margin="dense"
-                                value={search}
-                                onChange={(e) => updateSearch(e)}
-                                className={classes.margin}
-                                InputProps={{
-                                    startAdornment: (
-                                        <InputAdornment position="start">
-                                            <SearchIcon />
-                                        </InputAdornment>
-                                    ),
-                                }}
-                            />
+                        <div className={classes.tokensListContainer}>
+                            <List>
+                                {searchTokens.map((token) => {
+                                    return (
+                                        <ListItem
+                                            key={token.address}
+                                            button
+                                            // onClick={() => selectToken(token)}
+                                        >
+                                            <ListItemAvatar>
+                                                <Avatar variant="circular">
+                                                    <img
+                                                        src={token.logoURI}
+                                                        alt={token.name}
+                                                        className={
+                                                            classes.tokenLogo
+                                                        }
+                                                    />
+                                                </Avatar>
+                                            </ListItemAvatar>
+                                            <ListItemText
+                                                primary={token.name}
+                                                secondary={token.symbol}
+                                            />
+                                        </ListItem>
+                                    );
+                                })}
+                            </List>
                         </div>
-                    </div>
-                    <div className={classes.tokensListContainer}>
-                        <List>
-                            {searchTokens.map((token) => {
-                                return (
-                                    <ListItem key={token.address} button>
-                                        <ListItemAvatar>
-                                            <Avatar variant="circular">
-                                                <img
-                                                    src={token.logoURI}
-                                                    alt={token.name}
-                                                />
-                                            </Avatar>
-                                        </ListItemAvatar>
-                                        <ListItemText
-                                            primary={token.name}
-                                            secondary={token.symbol}
-                                        />
-                                    </ListItem>
-                                );
-                            })}
-                        </List>
-                    </div>
-                </Paper>
-            </Container>
-        </Modal>
+                    </Paper>
+                </Container>
+            </Modal>
+        </>
     );
 };
 
