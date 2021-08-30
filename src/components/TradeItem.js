@@ -41,7 +41,7 @@ const useStyles = makeStyles((theme) => ({
     },
 }));
 
-const TradeItem = ({ side, handleTokenSelectOpen }) => {
+const TradeItem = ({ side, activeToken, handleTokenSelectOpen }) => {
     const classes = useStyles();
 
     return (
@@ -64,9 +64,7 @@ const TradeItem = ({ side, handleTokenSelectOpen }) => {
                     className={classes.selectedToken}
                     onClick={() => handleTokenSelectOpen(side)}
                 >
-                    <div>1</div>
-                    <div>2</div>
-                    <div>3</div>
+                    {activeToken ? activeToken.symbol : "Pasirinkite"}
                 </Button>
             </div>
         </Paper>

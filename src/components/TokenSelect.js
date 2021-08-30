@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { makeStyles } from "@material-ui/core/styles";
 import axios from "axios";
 
@@ -17,6 +17,7 @@ import TextField from "@material-ui/core/TextField";
 import InputAdornment from "@material-ui/core/InputAdornment";
 import Backdrop from "@material-ui/core/Backdrop";
 import CircularProgress from "@material-ui/core/CircularProgress";
+import Pagination from "@material-ui/lab/Pagination";
 
 import CloseIcon from "@material-ui/icons/Close";
 import SearchIcon from "@material-ui/icons/Search";
@@ -74,27 +75,45 @@ const useStyles = makeStyles((theme) => ({
         zIndex: theme.zIndex.modal + 1,
         color: "#fff",
     },
+    bottomPagination: {
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: theme.spacing(1),
+    },
 }));
 
-const TokenSelect = ({ open, side, tokens, handleTokenSelectClose }) => {
-    const [loading, setLoading] = useState(true);
+const TokenSelect = ({
+    open,
+    side,
+    selected,
+    tokens,
+    handleTokenSelectClose,
+    selectToken,
+}) => {
     const [searchTokens, setSearchTokens] = useState(tokens);
+    const [displayTokens, setDisplayTokens] = useState(searchTokens);
+    const [totalPages, setTotalPages] = useState(1);
+    const [listPage, setListPage] = useState(1);
+    const listRef = useRef();
     const classes = useStyles();
 
     useEffect(() => {
-        if (loading) {
-            setLoading(false);
-        }
-    });
-
-    useEffect(() => {
-        console.log(side);
-        setSearchTokens(tokens.slice(0, 50));
+        setSearchTokens(tokens);
     }, [tokens]);
 
-    const searchForTokens = (search) => {
-        setLoading(true);
+    useEffect(() => {
+        const tokensPerPage = 50;
+        setDisplayTokens(
+            searchTokens.slice(
+                listPage * tokensPerPage - tokensPerPage,
+                listPage * tokensPerPage
+            )
+        );
+        setTotalPages(Math.ceil(searchTokens.length / tokensPerPage));
+    }, [listPage, searchTokens]);
 
+    const searchForTokens = (search) => {
         const lowerSearch = search.toLowerCase();
         setSearchTokens(
             tokens.filter((token) => {
@@ -107,14 +126,27 @@ const TokenSelect = ({ open, side, tokens, handleTokenSelectClose }) => {
         );
     };
 
+    const handleListPageChange = (e, value) => {
+        setListPage(value);
+        listRef.current.scrollTop = 0;
+    };
+
+    const updateSelectedTokenValue = (token) => {
+        selectToken(side, token);
+        handleTokenSelectClose();
+        setListPage(1);
+    };
+
+    const closeWindow = () => {
+        handleTokenSelectClose();
+        setListPage(1);
+    };
+
     return (
         <>
-            <Backdrop className={classes.backdrop} open={loading}>
-                <CircularProgress />
-            </Backdrop>
             <Modal
                 open={open}
-                onClose={() => handleTokenSelectClose()}
+                onClose={() => closeWindow()}
                 className={classes.root}
             >
                 <Container maxWidth="sm">
@@ -129,7 +161,7 @@ const TokenSelect = ({ open, side, tokens, handleTokenSelectClose }) => {
                                 </Typography>
                                 <IconButton
                                     color="primary"
-                                    onClick={() => handleTokenSelectClose()}
+                                    onClick={() => closeWindow()}
                                     className={classes.closeButton}
                                 >
                                     <CloseIcon className={classes.closeIcon} />
@@ -144,14 +176,24 @@ const TokenSelect = ({ open, side, tokens, handleTokenSelectClose }) => {
                                 />
                             </div>
                         </div>
-                        <div className={classes.tokensListContainer}>
+                        <div
+                            ref={listRef}
+                            className={classes.tokensListContainer}
+                        >
                             <List>
-                                {searchTokens.map((token) => {
+                                {displayTokens.map((token) => {
                                     return (
                                         <ListItem
-                                            key={token.address}
                                             button
-                                            // onClick={() => selectToken(token)}
+                                            key={token.address}
+                                            selected={
+                                                token === selected
+                                                    ? true
+                                                    : false
+                                            }
+                                            onClick={() =>
+                                                updateSelectedTokenValue(token)
+                                            }
                                         >
                                             <ListItemAvatar>
                                                 <Avatar variant="circular">
@@ -172,6 +214,17 @@ const TokenSelect = ({ open, side, tokens, handleTokenSelectClose }) => {
                                     );
                                 })}
                             </List>
+                        </div>
+                        <div className={classes.bottomPagination}>
+                            <Pagination
+                                count={totalPages}
+                                color="primary"
+                                siblingCount={0}
+                                page={listPage}
+                                onChange={(e, value) =>
+                                    handleListPageChange(e, value)
+                                }
+                            />
                         </div>
                     </Paper>
                 </Container>

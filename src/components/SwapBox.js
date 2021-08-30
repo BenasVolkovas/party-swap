@@ -49,19 +49,10 @@ const useStyles = makeStyles((theme) => ({
 const SwapBox = () => {
     const { authenticate, isAuthenticated } = useMoralis();
     const [tokens, setTokens] = useState({});
-    const [loading, setLoading] = useState(false);
     const [openSelect, setOpenSelect] = useState(false);
     const [openedSide, setOpenedSide] = useState("");
+    const [selectedTokens, setSelectedTokens] = useState({});
     const classes = useStyles();
-
-    const handleTokenSelectOpen = (side) => {
-        setOpenSelect(true);
-        setOpenedSide(side);
-    };
-
-    const handleTokenSelectClose = () => {
-        setOpenSelect(false);
-    };
 
     useEffect(() => {
         axios({
@@ -78,6 +69,24 @@ const SwapBox = () => {
         });
     }, []);
 
+    const handleTokenSelectOpen = (side) => {
+        setOpenSelect(true);
+        setOpenedSide(side);
+    };
+
+    const handleTokenSelectClose = () => {
+        setOpenSelect(false);
+        setOpenedSide("");
+    };
+
+    const updateSelectedToken = (side, token) => {
+        setSelectedTokens((currentTokens) => ({
+            ...currentTokens,
+            [side]: token,
+        }));
+        console.log(side, " ", token);
+    };
+
     return (
         <>
             <Container maxWidth="sm">
@@ -90,8 +99,9 @@ const SwapBox = () => {
                     <div className={classes.actionPart}>
                         <TradeItem
                             side="from"
-                            handleTokenSelectOpen={() =>
-                                handleTokenSelectOpen()
+                            activeToken={selectedTokens.from}
+                            handleTokenSelectOpen={(side) =>
+                                handleTokenSelectOpen(side)
                             }
                         />
                         <div className={classes.switchButtonContainer}>
@@ -104,8 +114,9 @@ const SwapBox = () => {
                         </div>
                         <TradeItem
                             side="to"
-                            handleTokenSelectOpen={() =>
-                                handleTokenSelectOpen()
+                            activeToken={selectedTokens.to}
+                            handleTokenSelectOpen={(side) =>
+                                handleTokenSelectOpen(side)
                             }
                         />
 
@@ -133,8 +144,10 @@ const SwapBox = () => {
             <TokenSelect
                 open={openSelect}
                 side={openedSide}
+                selected={selectedTokens[openedSide]}
                 tokens={Object.values(tokens)}
                 handleTokenSelectClose={() => handleTokenSelectClose()}
+                selectToken={(side, token) => updateSelectedToken(side, token)}
             />
         </>
     );
