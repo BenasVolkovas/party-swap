@@ -110,8 +110,13 @@ const TokenSelect = ({
                 listPage * tokensPerPage
             )
         );
+    }, [listPage]);
+
+    useEffect(() => {
+        const tokensPerPage = 50;
         setTotalPages(Math.ceil(searchTokens.length / tokensPerPage));
-    }, [listPage, searchTokens]);
+        setListPage(1);
+    }, [searchTokens]);
 
     const searchForTokens = (search) => {
         const lowerSearch = search.toLowerCase();
@@ -133,12 +138,12 @@ const TokenSelect = ({
 
     const updateSelectedTokenValue = (token) => {
         selectToken(side, token);
-        handleTokenSelectClose();
-        setListPage(1);
+        closeWindow();
     };
 
     const closeWindow = () => {
         handleTokenSelectClose();
+        searchForTokens("");
         setListPage(1);
     };
 
@@ -196,15 +201,11 @@ const TokenSelect = ({
                                             }
                                         >
                                             <ListItemAvatar>
-                                                <Avatar variant="circular">
-                                                    <img
-                                                        src={token.logoURI}
-                                                        alt={token.name}
-                                                        className={
-                                                            classes.tokenLogo
-                                                        }
-                                                    />
-                                                </Avatar>
+                                                <Avatar
+                                                    variant="circular"
+                                                    src={token.logoURI}
+                                                    alt={token.name}
+                                                />
                                             </ListItemAvatar>
                                             <ListItemText
                                                 primary={token.name}

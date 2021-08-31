@@ -51,7 +51,10 @@ const SwapBox = () => {
     const [tokens, setTokens] = useState({});
     const [openSelect, setOpenSelect] = useState(false);
     const [openedSide, setOpenedSide] = useState("");
-    const [selectedTokens, setSelectedTokens] = useState({});
+    const [selectedTokens, setSelectedTokens] = useState({
+        from: "",
+        to: "",
+    });
     const classes = useStyles();
 
     useEffect(() => {
@@ -87,6 +90,13 @@ const SwapBox = () => {
         console.log(side, " ", token);
     };
 
+    const switchTokensSides = () => {
+        setSelectedTokens((currentTokens) => ({
+            from: currentTokens.to,
+            to: currentTokens.from,
+        }));
+    };
+
     return (
         <>
             <Container maxWidth="sm">
@@ -108,6 +118,7 @@ const SwapBox = () => {
                             <IconButton
                                 color="primary"
                                 className={classes.switchButton}
+                                onClick={() => switchTokensSides()}
                             >
                                 <SwapVertIcon className={classes.switchIcon} />
                             </IconButton>

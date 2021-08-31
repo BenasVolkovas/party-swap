@@ -20,26 +20,34 @@ const TokensSearch = ({ searchForTokens }) => {
         setSearch(e.target.value);
     };
 
+    const submitSearch = (e) => {
+        e.preventDefault();
+        searchForTokens(search);
+    };
+
     return (
-        <TextField
-            fullWidth
-            variant="outlined"
-            placeholder="Ieškokite pagal pavadinimą ar adresą"
-            margin="dense"
-            value={search}
-            onChange={(e) => updateSearch(e)}
-            InputProps={{
-                endAdornment: (
-                    <InputAdornment
-                        position="end"
-                        className={classes.searchButton}
-                        onClick={() => searchForTokens(search)}
-                    >
-                        <SearchIcon />
-                    </InputAdornment>
-                ),
-            }}
-        />
+        <form onSubmit={(e) => submitSearch(e)}>
+            <TextField
+                fullWidth
+                variant="outlined"
+                placeholder="Ieškokite pagal pavadinimą ar adresą"
+                margin="dense"
+                value={search}
+                onChange={(e) => updateSearch(e)}
+                InputProps={{
+                    endAdornment: (
+                        <InputAdornment
+                            position="end"
+                            className={classes.searchButton}
+                            onClick={() => searchForTokens(search)}
+                        >
+                            <SearchIcon />
+                        </InputAdornment>
+                    ),
+                    spellCheck: "false",
+                }}
+            />
+        </form>
     );
 };
 
