@@ -46,6 +46,9 @@ const useStyles = makeStyles((theme) => ({
         height: theme.spacing(4),
         width: theme.spacing(4),
     },
+    alert: {
+        margin: theme.spacing(1, 1, 0, 1),
+    },
 }));
 
 const TopNav = () => {
@@ -150,6 +153,7 @@ const TopNav = () => {
                 <Collapse in={openError}>
                     <Alert
                         severity="error"
+                        className={classes.alert}
                         action={
                             <IconButton
                                 aria-label="close"

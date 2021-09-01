@@ -12,11 +12,11 @@ import Button from "@material-ui/core/Button";
 import IconButton from "@material-ui/core/IconButton";
 import Box from "@material-ui/core/Box";
 import Input from "@material-ui/core/Input";
-
 import SwapVertIcon from "@material-ui/icons/SwapVert";
 
 import TradeItem from "./TradeItem";
 import TokenSelect from "./TokenSelect";
+
 const useStyles = makeStyles((theme) => ({
     rootBox: {
         marginTop: theme.spacing(10),

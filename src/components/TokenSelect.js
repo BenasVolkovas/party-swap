@@ -98,26 +98,36 @@ const TokenSelect = ({
     const listRef = useRef();
     const classes = useStyles();
 
+    // Update searching tokens if tokens fron 1inch changes
     useEffect(() => {
         setSearchTokens(tokens);
     }, [tokens]);
 
+    // When page changes, display other tokens by page number
     useEffect(() => {
         const tokensPerPage = 50;
+
         setDisplayTokens(
             searchTokens.slice(
                 listPage * tokensPerPage - tokensPerPage,
                 listPage * tokensPerPage
             )
         );
-    }, [listPage]);
 
+        if (listRef.current) {
+            listRef.current.scrollTop = 0;
+        }
+    }, [listPage, searchTokens]);
+
+    // When searched tokens changes, display other tokens, update total pages number and current page
     useEffect(() => {
         const tokensPerPage = 50;
+
         setTotalPages(Math.ceil(searchTokens.length / tokensPerPage));
         setListPage(1);
     }, [searchTokens]);
 
+    // Search for tokens by given input
     const searchForTokens = (search) => {
         const lowerSearch = search.toLowerCase();
         setSearchTokens(
@@ -131,20 +141,21 @@ const TokenSelect = ({
         );
     };
 
+    // Change page
     const handleListPageChange = (e, value) => {
         setListPage(value);
-        listRef.current.scrollTop = 0;
     };
 
+    // Select the token and close the window
     const updateSelectedTokenValue = (token) => {
         selectToken(side, token);
         closeWindow();
     };
 
+    // Close the window
     const closeWindow = () => {
         handleTokenSelectClose();
         searchForTokens("");
-        setListPage(1);
     };
 
     return (
