@@ -52,8 +52,8 @@ const SwapBox = () => {
     const [openSelect, setOpenSelect] = useState(false);
     const [openedSide, setOpenedSide] = useState("");
     const [selectedTokens, setSelectedTokens] = useState({
-        from: "",
-        to: "",
+        from: { info: {}, amount: "" },
+        to: { info: {}, amount: "" },
     });
     const classes = useStyles();
 
@@ -83,11 +83,18 @@ const SwapBox = () => {
     };
 
     const updateSelectedToken = (side, token) => {
+        console.log(token);
         setSelectedTokens((currentTokens) => ({
             ...currentTokens,
-            [side]: token,
+            [side]: { ...currentTokens[side], info: token },
         }));
-        console.log(side, " ", token);
+    };
+
+    const updateSelectedTokenAmount = (side, amount) => {
+        setSelectedTokens((currentTokens) => ({
+            ...currentTokens,
+            [side]: { ...currentTokens[side], amount: amount },
+        }));
     };
 
     const switchTokensSides = () => {
@@ -95,6 +102,21 @@ const SwapBox = () => {
             from: currentTokens.to,
             to: currentTokens.from,
         }));
+    };
+
+    const getQuote = () => {
+        axios({
+            method: "get",
+            url: `https://api.1inch.exchange/v3.0/1/quote?fromTokenAddress=${selectedTokens.from.info.address}&toTokenAddress=${selectedTokens.to.info.address}&amount=${selectedTokens.from.amount}&fee=1`,
+            headers: {
+                "Content-Type": "application/json",
+            },
+            xsrfCookieName: "XSRF-TOKEN",
+            xsrfHeaderName: "X-XSRF-TOKEN",
+        }).then((response) => {
+            const data = response.data;
+            console.log(data);
+        });
     };
 
     return (
@@ -113,6 +135,9 @@ const SwapBox = () => {
                             handleTokenSelectOpen={(side) =>
                                 handleTokenSelectOpen(side)
                             }
+                            updateSelectedTokenAmount={(side, amount) =>
+                                updateSelectedTokenAmount(side, amount)
+                            }
                         />
                         <div className={classes.switchButtonContainer}>
                             <IconButton
@@ -129,6 +154,9 @@ const SwapBox = () => {
                             handleTokenSelectOpen={(side) =>
                                 handleTokenSelectOpen(side)
                             }
+                            updateSelectedTokenAmount={(side, amount) =>
+                                updateSelectedTokenAmount(side, amount)
+                            }
                         />
 
                         {isAuthenticated ? (
@@ -136,6 +164,7 @@ const SwapBox = () => {
                                 variant="contained"
                                 color="primary"
                                 className={classes.button}
+                                onClick={() => getQuote()}
                             >
                                 Keisti
                             </Button>

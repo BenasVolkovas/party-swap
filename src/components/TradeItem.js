@@ -65,7 +65,12 @@ const useStyles = makeStyles((theme) => ({
     },
 }));
 
-const TradeItem = ({ side, activeToken, handleTokenSelectOpen }) => {
+const TradeItem = ({
+    side,
+    activeToken,
+    handleTokenSelectOpen,
+    updateSelectedTokenAmount,
+}) => {
     const classes = useStyles();
 
     return (
@@ -81,9 +86,13 @@ const TradeItem = ({ side, activeToken, handleTokenSelectOpen }) => {
                     disableUnderline
                     type="number"
                     placeholder="0.0"
+                    value={activeToken.info.amount}
+                    onChange={(e) =>
+                        updateSelectedTokenAmount(side, e.target.value)
+                    }
                     className={classes.amountInput}
                 />
-                {activeToken ? (
+                {Object.entries(activeToken.info).length !== 0 ? (
                     <Button
                         variant="outlined"
                         endIcon={
@@ -93,16 +102,16 @@ const TradeItem = ({ side, activeToken, handleTokenSelectOpen }) => {
                         onClick={() => handleTokenSelectOpen(side)}
                     >
                         <Avatar
-                            variant="circle"
-                            src={activeToken.logoURI}
-                            alt={activeToken.name}
+                            variant="circular"
+                            src={activeToken.info.logoURI}
+                            alt={activeToken.info.name}
                             className={classes.tokenLogo}
                         />
                         <Typography
                             variant="body1"
                             className={classes.tokenSymbol}
                         >
-                            {activeToken.symbol}
+                            {activeToken.info.symbol}
                         </Typography>
                     </Button>
                 ) : (
