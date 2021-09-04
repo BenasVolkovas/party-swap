@@ -86,7 +86,7 @@ const TradeItem = ({
                     disableUnderline
                     type="number"
                     placeholder="0.0"
-                    value={activeToken.info.amount}
+                    value={activeToken.amount}
                     onChange={(e) =>
                         updateSelectedTokenAmount(side, e.target.value)
                     }

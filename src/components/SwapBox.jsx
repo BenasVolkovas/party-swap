@@ -46,6 +46,16 @@ const useStyles = makeStyles((theme) => ({
         width: "100%",
     },
 }));
+
+const fromDecimalStringToInteger = (number, decimal) => {
+    const arr = Number(number).toFixed(decimal).toString().split(".");
+    return parseInt(arr.join(""));
+};
+
+const fromIntegerToDecimalString = (number, decimal) => {
+    return (Number(number) / Math.pow(10, decimal)).toFixed(decimal);
+};
+
 const SwapBox = () => {
     const { authenticate, isAuthenticated } = useMoralis();
     const [tokens, setTokens] = useState({});
@@ -72,6 +82,10 @@ const SwapBox = () => {
         });
     }, []);
 
+    useEffect(() => {
+        getQuote();
+    }, [selectedTokens]);
+
     const handleTokenSelectOpen = (side) => {
         setOpenSelect(true);
         setOpenedSide(side);
@@ -83,10 +97,15 @@ const SwapBox = () => {
     };
 
     const updateSelectedToken = (side, token) => {
-        console.log(token);
+        const oppositeSide =
+            side === "from" ? "to" : side === "to" ? "from" : null;
+
         setSelectedTokens((currentTokens) => ({
             ...currentTokens,
-            [side]: { ...currentTokens[side], info: token },
+            [side]:
+                token !== currentTokens[oppositeSide].info
+                    ? { ...currentTokens[side], info: token }
+                    : currentTokens[side],
         }));
     };
 
@@ -105,18 +124,37 @@ const SwapBox = () => {
     };
 
     const getQuote = () => {
-        axios({
-            method: "get",
-            url: `https://api.1inch.exchange/v3.0/1/quote?fromTokenAddress=${selectedTokens.from.info.address}&toTokenAddress=${selectedTokens.to.info.address}&amount=${selectedTokens.from.amount}&fee=1`,
-            headers: {
-                "Content-Type": "application/json",
-            },
-            xsrfCookieName: "XSRF-TOKEN",
-            xsrfHeaderName: "X-XSRF-TOKEN",
-        }).then((response) => {
-            const data = response.data;
-            console.log(data);
-        });
+        if (
+            selectedTokens.from.info.address &&
+            selectedTokens.to.info.address
+        ) {
+            const amountToSell = fromDecimalStringToInteger(
+                selectedTokens.from.amount,
+                selectedTokens.from.info.decimals
+            );
+
+            console.log(`amountToSell: `, amountToSell);
+
+            axios({
+                method: "get",
+                url: `https://api.1inch.exchange/v3.0/1/quote?fromTokenAddress=${selectedTokens.from.info.address}&toTokenAddress=${selectedTokens.to.info.address}&amount=${amountToSell}&fee=1`,
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                xsrfCookieName: "XSRF-TOKEN",
+                xsrfHeaderName: "X-XSRF-TOKEN",
+            }).then((response) => {
+                const data = response.data;
+                console.log(data);
+
+                console.log(
+                    fromIntegerToDecimalString(
+                        Number(data.toTokenAmount),
+                        data.toToken.decimals
+                    )
+                );
+            });
+        }
     };
 
     return (
