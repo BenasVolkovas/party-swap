@@ -24,6 +24,7 @@ const useStyles = makeStyles((theme) => ({
     },
     amountInput: {
         fontSize: theme.spacing(1.6),
+        marginRight: theme.spacing(1),
         flexGrow: 1,
         "& > ::-webkit-outer-spin-button": {
             "-webkit-appearance": "none",
@@ -82,6 +83,7 @@ const TradeItem = ({
             </div>
             <div className={classes.bottomDetails}>
                 <Input
+                    readOnly={side === "to"}
                     required
                     disableUnderline
                     type="number"

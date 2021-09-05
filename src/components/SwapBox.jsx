@@ -47,12 +47,12 @@ const useStyles = makeStyles((theme) => ({
     },
 }));
 
-const fromDecimalStringToInteger = (number, decimal) => {
+const fromDecimalStringToIntegerString = (number, decimal) => {
     const arr = Number(number).toFixed(decimal).toString().split(".");
-    return parseInt(arr.join(""));
+    return arr.join("");
 };
 
-const fromIntegerToDecimalString = (number, decimal) => {
+const fromIntegerStringToDecimalString = (number, decimal) => {
     return (Number(number) / Math.pow(10, decimal)).toFixed(decimal);
 };
 
@@ -84,7 +84,7 @@ const SwapBox = () => {
 
     useEffect(() => {
         getQuote();
-    }, [selectedTokens]);
+    }, [selectedTokens.from, selectedTokens.to.info]);
 
     const handleTokenSelectOpen = (side) => {
         setOpenSelect(true);
@@ -128,32 +128,50 @@ const SwapBox = () => {
             selectedTokens.from.info.address &&
             selectedTokens.to.info.address
         ) {
-            const amountToSell = fromDecimalStringToInteger(
+            const amountToSell = fromDecimalStringToIntegerString(
                 selectedTokens.from.amount,
                 selectedTokens.from.info.decimals
             );
 
-            console.log(`amountToSell: `, amountToSell);
+            console.log("SELL: ", amountToSell);
 
-            axios({
-                method: "get",
-                url: `https://api.1inch.exchange/v3.0/1/quote?fromTokenAddress=${selectedTokens.from.info.address}&toTokenAddress=${selectedTokens.to.info.address}&amount=${amountToSell}&fee=1`,
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                xsrfCookieName: "XSRF-TOKEN",
-                xsrfHeaderName: "X-XSRF-TOKEN",
-            }).then((response) => {
-                const data = response.data;
-                console.log(data);
+            if (Number(amountToSell) > 0) {
+                axios({
+                    method: "get",
+                    url: `https://api.1inch.exchange/v3.0/1/quote?fromTokenAddress=${selectedTokens.from.info.address}&toTokenAddress=${selectedTokens.to.info.address}&amount=${amountToSell}&fee=1`,
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    xsrfCookieName: "XSRF-TOKEN",
+                    xsrfHeaderName: "X-XSRF-TOKEN",
+                })
+                    .then((response) => {
+                        const data = response.data;
+                        console.log(data);
 
-                console.log(
-                    fromIntegerToDecimalString(
-                        Number(data.toTokenAmount),
-                        data.toToken.decimals
-                    )
-                );
-            });
+                        setSelectedTokens((currentTokens) => ({
+                            ...currentTokens,
+                            to: {
+                                info: currentTokens.to.info,
+                                amount: fromIntegerStringToDecimalString(
+                                    data.toTokenAmount,
+                                    data.toToken.decimals
+                                ),
+                            },
+                        }));
+                    })
+                    .catch((error) => {
+                        console.log(error.response);
+                    });
+            } else {
+                setSelectedTokens((currentTokens) => ({
+                    ...currentTokens,
+                    to: {
+                        info: currentTokens.to.info,
+                        amount: "",
+                    },
+                }));
+            }
         }
     };
 
