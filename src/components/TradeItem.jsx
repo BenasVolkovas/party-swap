@@ -1,4 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import {
+    useMoralis,
+    useMoralisWeb3Api,
+    useMoralisWeb3ApiCall,
+} from "react-moralis";
 import { makeStyles } from "@material-ui/core/styles";
 import Paper from "@material-ui/core/Paper";
 import Typography from "@material-ui/core/Typography";
@@ -72,13 +77,30 @@ const TradeItem = ({
     handleTokenSelectOpen,
     updateSelectedTokenAmount,
 }) => {
+    const Web3Api = useMoralisWeb3Api();
+    const [balance, setBalance] = useState(0);
     const classes = useStyles();
+
+    useEffect(() => {
+        fetchBalance();
+    }, []);
+
+    const fetchBalance = async () => {
+        const balance = await Web3Api.account.getTokenBalances({
+            chain: "kovan",
+        });
+        console.log(balance);
+        setBalance(balance);
+    };
 
     return (
         <Paper elevation={0} variant="outlined" className={classes.root}>
             <div className={classes.topDetails}>
                 <Typography variant="body2" className={classes.sideTitle}>
                     {side === "from" ? "Iš" : side === "to" ? "Į" : null}
+                </Typography>
+                <Typography variant="body2" className={classes.balance}>
+                    Balansas: {balance}
                 </Typography>
             </div>
             <div className={classes.bottomDetails}>
