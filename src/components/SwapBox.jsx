@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useMoralis } from "react-moralis";
+import { useMoralis, useMoralisWeb3Api } from "react-moralis";
 import { makeStyles } from "@material-ui/core/styles";
 import axios from "axios";
 
@@ -19,7 +19,7 @@ import TokenSelect from "./TokenSelect";
 
 const useStyles = makeStyles((theme) => ({
     rootBox: {
-        marginTop: theme.spacing(10),
+        marginTop: theme.spacing(6),
     },
     actionPart: {
         padding: theme.spacing(1.5),
@@ -57,8 +57,18 @@ const fromIntegerStringToDecimalString = (number, decimal) => {
 };
 
 const SwapBox = () => {
-    const { authenticate, isAuthenticated } = useMoralis();
+    const Web3Api = useMoralisWeb3Api();
+    const {
+        web3,
+        enableWeb3,
+        isWeb3Enabled,
+        authenticate,
+        isAuthenticated,
+        Moralis,
+    } = useMoralis();
     const [tokens, setTokens] = useState({});
+    const [balances, setBalances] = useState({});
+    const [currentChain, setCurrentChain] = useState("");
     const [openSelect, setOpenSelect] = useState(false);
     const [openedSide, setOpenedSide] = useState("");
     const [selectedTokens, setSelectedTokens] = useState({
@@ -85,6 +95,34 @@ const SwapBox = () => {
     useEffect(() => {
         getQuote();
     }, [selectedTokens.from, selectedTokens.to.info]);
+
+    useEffect(() => {
+        if (isWeb3Enabled) {
+            const chainId = web3.currentProvider.chainId;
+            setCurrentChain(chainId);
+        }
+    }, [isWeb3Enabled]);
+
+    useEffect(() => {
+        fetchBalance(currentChain);
+    }, [currentChain]);
+
+    Moralis.onChainChanged(async (chainId) => {
+        setCurrentChain(chainId);
+    });
+
+    const fetchBalance = async (chainId) => {
+        const balance = await Web3Api.account.getTokenBalances({
+            chain: chainId,
+        });
+
+        const balancesObject = balance.reduce((previousObject, currentItem) => {
+            previousObject[currentItem.token_address] = currentItem.balance;
+            return previousObject;
+        }, {});
+
+        setBalances(balancesObject);
+    };
 
     const handleTokenSelectOpen = (side) => {
         setOpenSelect(true);
@@ -133,8 +171,6 @@ const SwapBox = () => {
                 selectedTokens.from.info.decimals
             );
 
-            console.log("SELL: ", amountToSell);
-
             if (Number(amountToSell) > 0) {
                 axios({
                     method: "get",
@@ -147,7 +183,6 @@ const SwapBox = () => {
                 })
                     .then((response) => {
                         const data = response.data;
-                        console.log(data);
 
                         setSelectedTokens((currentTokens) => ({
                             ...currentTokens,
@@ -187,7 +222,11 @@ const SwapBox = () => {
                     <div className={classes.actionPart}>
                         <TradeItem
                             side="from"
+                            isAuthenticated={isAuthenticated}
                             activeToken={selectedTokens.from}
+                            balance={
+                                balances[selectedTokens.from.info.address] || 0
+                            }
                             handleTokenSelectOpen={(side) =>
                                 handleTokenSelectOpen(side)
                             }
@@ -206,7 +245,11 @@ const SwapBox = () => {
                         </div>
                         <TradeItem
                             side="to"
+                            isAuthenticated={isAuthenticated}
                             activeToken={selectedTokens.to}
+                            balance={
+                                balances[selectedTokens.to.info.address] || 0
+                            }
                             handleTokenSelectOpen={(side) =>
                                 handleTokenSelectOpen(side)
                             }

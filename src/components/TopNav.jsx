@@ -52,10 +52,13 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const TopNav = () => {
-    const [openError, setOpenError] = useState(true);
+    const [openAuthError, setOpenAuthError] = useState(false);
+    const [openWeb3Error, setOpenWeb3Error] = useState(false);
     const [anchorEl, setAnchorEl] = useState(null);
     const [shortAddress, setShortAddress] = useState("");
     const {
+        enableWeb3,
+        web3EnableError,
         authenticate,
         isAuthenticated,
         isAuthenticating,
@@ -67,6 +70,8 @@ const TopNav = () => {
 
     useEffect(() => {
         if (isAuthenticated) {
+            enableWeb3();
+
             const address = user.attributes.ethAddress;
             setShortAddress(
                 address.substr(0, 6) +
@@ -78,9 +83,15 @@ const TopNav = () => {
 
     useEffect(() => {
         if (authError) {
-            setOpenError(true);
+            setOpenAuthError(true);
         }
     }, [authError]);
+
+    useEffect(() => {
+        if (web3EnableError) {
+            setOpenWeb3Error(true);
+        }
+    }, [web3EnableError]);
 
     const openMenu = (event) => {
         setAnchorEl(event.currentTarget);
@@ -140,6 +151,7 @@ const TopNav = () => {
                         <Button
                             variant="contained"
                             color="primary"
+                            disabled={isAuthenticating}
                             onClick={() => authenticate()}
                         >
                             Prisijungti su pinigine
@@ -150,7 +162,7 @@ const TopNav = () => {
 
             {/* Authentication errors occur when user does not provide sinature to the request  */}
             {authError && (
-                <Collapse in={openError}>
+                <Collapse in={openAuthError}>
                     <Alert
                         severity="error"
                         className={classes.alert}
@@ -160,7 +172,7 @@ const TopNav = () => {
                                 color="inherit"
                                 size="small"
                                 onClick={() => {
-                                    setOpenError(false);
+                                    setOpenAuthError(false);
                                 }}
                             >
                                 <CloseIcon fontSize="inherit" />
@@ -169,6 +181,30 @@ const TopNav = () => {
                     >
                         <AlertTitle>Prisijungimo klaida</AlertTitle>
                         {authError.message}
+                    </Alert>
+                </Collapse>
+            )}
+
+            {web3EnableError && (
+                <Collapse in={openWeb3Error}>
+                    <Alert
+                        severity="error"
+                        className={classes.alert}
+                        action={
+                            <IconButton
+                                aria-label="close"
+                                color="inherit"
+                                size="small"
+                                onClick={() => {
+                                    setOpenWeb3Error(false);
+                                }}
+                            >
+                                <CloseIcon fontSize="inherit" />
+                            </IconButton>
+                        }
+                    >
+                        <AlertTitle>Klaida bandant įgalinti WEB3</AlertTitle>
+                        {web3EnableError.message}
                     </Alert>
                 </Collapse>
             )}

@@ -1,10 +1,7 @@
 import { useState, useEffect } from "react";
-import {
-    useMoralis,
-    useMoralisWeb3Api,
-    useMoralisWeb3ApiCall,
-} from "react-moralis";
 import { makeStyles } from "@material-ui/core/styles";
+
+import Link from "@material-ui/core/Link";
 import Paper from "@material-ui/core/Paper";
 import Typography from "@material-ui/core/Typography";
 import Input from "@material-ui/core/Input";
@@ -20,6 +17,10 @@ const useStyles = makeStyles((theme) => ({
     },
     topDetails: {
         padding: theme.spacing(1.2, 1.6, 0, 1.6),
+        display: "flex",
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
     },
     sideTitle: {},
     bottomDetails: {
@@ -69,39 +70,55 @@ const useStyles = makeStyles((theme) => ({
         height: theme.spacing(3.6),
         backgroundColor: theme.whiteColor.color,
     },
+    balance: {
+        display: "flex",
+        flexDirection: "row",
+
+        alignItems: "center",
+        justifyContent: "flex-end",
+    },
+    maxBalanceButton: {
+        color: theme.themeColor.color,
+        fontFamily: ["Kodchasan", "sans-serif"].join(","),
+        paddingLeft: theme.spacing(0.5),
+    },
 }));
 
 const TradeItem = ({
     side,
+    isAuthenticated,
     activeToken,
+    balance,
     handleTokenSelectOpen,
     updateSelectedTokenAmount,
 }) => {
-    const Web3Api = useMoralisWeb3Api();
-    const [balance, setBalance] = useState(0);
     const classes = useStyles();
-
-    useEffect(() => {
-        fetchBalance();
-    }, []);
-
-    const fetchBalance = async () => {
-        const balance = await Web3Api.account.getTokenBalances({
-            chain: "kovan",
-        });
-        console.log(balance);
-        setBalance(balance);
-    };
-
     return (
         <Paper elevation={0} variant="outlined" className={classes.root}>
             <div className={classes.topDetails}>
                 <Typography variant="body2" className={classes.sideTitle}>
                     {side === "from" ? "Iš" : side === "to" ? "Į" : null}
                 </Typography>
-                <Typography variant="body2" className={classes.balance}>
-                    Balansas: {balance}
-                </Typography>
+                {isAuthenticated && (
+                    <Typography variant="body2" className={classes.balance}>
+                        <span>Balansas: {balance}</span>
+                        {balance > 0 && (
+                            <Link
+                                component="button"
+                                variant="body2"
+                                className={classes.maxBalanceButton}
+                                onClick={() =>
+                                    updateSelectedTokenAmount(
+                                        side,
+                                        balance.toString()
+                                    )
+                                }
+                            >
+                                (MAX)
+                            </Link>
+                        )}
+                    </Typography>
+                )}
             </div>
             <div className={classes.bottomDetails}>
                 <Input
