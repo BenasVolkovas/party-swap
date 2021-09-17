@@ -53,7 +53,27 @@ const fromDecimalStringToIntegerString = (number, decimal) => {
 };
 
 const fromIntegerStringToDecimalString = (number, decimal) => {
-    return (Number(number) / Math.pow(10, decimal)).toFixed(decimal);
+    const decimalNumber = (Number(number) / Math.pow(10, decimal)).toFixed(
+        decimal
+    );
+
+    let zeros = 0;
+    for (const char of decimalNumber.split("").reverse()) {
+        if (char === "0") {
+            zeros += 1;
+        } else if (char === ".") {
+            zeros += 1;
+            break;
+        } else {
+            break;
+        }
+    }
+
+    let decimalWithoutZeros = decimalNumber;
+    if (zeros > 0) {
+        decimalWithoutZeros = decimalNumber.slice(0, -zeros);
+    }
+    return decimalWithoutZeros;
 };
 
 const SwapBox = () => {
@@ -97,6 +117,7 @@ const SwapBox = () => {
     }, [selectedTokens.from, selectedTokens.to.info]);
 
     useEffect(() => {
+        console.log("Enabled: ", isWeb3Enabled);
         if (isWeb3Enabled) {
             const chainId = web3.currentProvider.chainId;
             setCurrentChain(chainId);
@@ -104,7 +125,9 @@ const SwapBox = () => {
     }, [isWeb3Enabled]);
 
     useEffect(() => {
-        fetchBalance(currentChain);
+        if (isWeb3Enabled) {
+            fetchBalance(currentChain);
+        }
     }, [currentChain]);
 
     Moralis.onChainChanged(async (chainId) => {
@@ -112,12 +135,17 @@ const SwapBox = () => {
     });
 
     const fetchBalance = async (chainId) => {
-        const balance = await Web3Api.account.getTokenBalances({
+        let balance = await Web3Api.account.getTokenBalances({
             chain: chainId,
         });
 
         const balancesObject = balance.reduce((previousObject, currentItem) => {
-            previousObject[currentItem.token_address] = currentItem.balance;
+            previousObject[currentItem.token_address] =
+                fromIntegerStringToDecimalString(
+                    currentItem.balance,
+                    currentItem.decimals
+                );
+
             return previousObject;
         }, {});
 

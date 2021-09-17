@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useMoralis } from "react-moralis";
 import { makeStyles } from "@material-ui/core/styles";
 
 import Link from "@material-ui/core/Link";
@@ -93,16 +94,17 @@ const TradeItem = ({
     updateSelectedTokenAmount,
 }) => {
     const classes = useStyles();
+
     return (
         <Paper elevation={0} variant="outlined" className={classes.root}>
             <div className={classes.topDetails}>
                 <Typography variant="body2" className={classes.sideTitle}>
                     {side === "from" ? "Iš" : side === "to" ? "Į" : null}
                 </Typography>
-                {isAuthenticated && (
+                {isAuthenticated && Object.keys(activeToken.info).length > 0 ? (
                     <Typography variant="body2" className={classes.balance}>
                         <span>Balansas: {balance}</span>
-                        {balance > 0 && (
+                        {balance > 0 && side === "from" ? (
                             <Link
                                 component="button"
                                 variant="body2"
@@ -116,9 +118,9 @@ const TradeItem = ({
                             >
                                 (MAX)
                             </Link>
-                        )}
+                        ) : null}
                     </Typography>
-                )}
+                ) : null}
             </div>
             <div className={classes.bottomDetails}>
                 <Input
