@@ -20,6 +20,22 @@ import TokenSelect from "./TokenSelect";
 const useStyles = makeStyles((theme) => ({
     rootBox: {
         marginTop: theme.spacing(6),
+        position: "relative",
+    },
+    wrongNetworkError: {
+        width: "100%",
+        height: "100%",
+        borderRadius: "inherit",
+        backgroundColor: "rgba(0, 0, 0, 0.5)",
+        position: "absolute",
+        zIndex: 100,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: theme.spacing(5),
+    },
+    wronkNetworkMessage: {
+        padding: theme.spacing(2),
     },
     actionPart: {
         padding: theme.spacing(1.5),
@@ -89,6 +105,7 @@ const SwapBox = () => {
     const [tokens, setTokens] = useState({});
     const [balances, setBalances] = useState({});
     const [currentChain, setCurrentChain] = useState("");
+    const [availableChain, setAvailableChain] = useState(true);
     const [openSelect, setOpenSelect] = useState(false);
     const [openedSide, setOpenedSide] = useState("");
     const [selectedTokens, setSelectedTokens] = useState({
@@ -96,6 +113,12 @@ const SwapBox = () => {
         to: { info: {}, amount: "" },
     });
     const classes = useStyles();
+
+    //
+    //
+
+    //
+    //
 
     useEffect(() => {
         axios({
@@ -135,21 +158,29 @@ const SwapBox = () => {
     });
 
     const fetchBalance = async (chainId) => {
-        let balance = await Web3Api.account.getTokenBalances({
-            chain: chainId,
-        });
+        if (chainId === "eth" || chainId === "mainnet" || chainId === "0x1") {
+            let balance = await Web3Api.account.getTokenBalances({
+                chain: chainId,
+            });
 
-        const balancesObject = balance.reduce((previousObject, currentItem) => {
-            previousObject[currentItem.token_address] =
-                fromIntegerStringToDecimalString(
-                    currentItem.balance,
-                    currentItem.decimals
-                );
+            const balancesObject = balance.reduce(
+                (previousObject, currentItem) => {
+                    previousObject[currentItem.token_address] =
+                        fromIntegerStringToDecimalString(
+                            currentItem.balance,
+                            currentItem.decimals
+                        );
 
-            return previousObject;
-        }, {});
+                    return previousObject;
+                },
+                {}
+            );
 
-        setBalances(balancesObject);
+            setAvailableChain(true);
+            setBalances(balancesObject);
+        } else {
+            setAvailableChain(false);
+        }
     };
 
     const handleTokenSelectOpen = (side) => {
@@ -238,10 +269,44 @@ const SwapBox = () => {
         }
     };
 
+    const approveSpender = () => {
+        axios({
+            method: "get",
+            url: `https://api.1inch.exchange/v3.0/1/approve/spender`,
+            headers: {
+                "Content-Type": "application/json",
+            },
+            xsrfCookieName: "XSRF-TOKEN",
+            xsrfHeaderName: "X-XSRF-TOKEN",
+        })
+            .then((response) => {
+                const data = response.data;
+
+                console.log("data: ", data);
+            })
+            .catch((error) => {
+                console.log(error.response);
+            });
+    };
+
     return (
         <>
             <Container maxWidth="sm">
                 <Paper elevation={3} className={classes.rootBox}>
+                    {!availableChain && (
+                        <div className={classes.wrongNetworkError}>
+                            <Paper className={classes.wronkNetworkMessage}>
+                                <Typography variant="body1">
+                                    Netinkamas tinklas.
+                                </Typography>
+                                <Typography variant="body2">
+                                    Norėdami tęsti pasirinkite „Ethereum
+                                    mainnet“ tinklą.
+                                </Typography>
+                            </Paper>
+                        </div>
+                    )}
+
                     <Typography variant="h5" className={classes.title}>
                         Keitykla
                     </Typography>
@@ -286,16 +351,7 @@ const SwapBox = () => {
                             }
                         />
 
-                        {isAuthenticated ? (
-                            <Button
-                                variant="contained"
-                                color="primary"
-                                className={classes.button}
-                                onClick={() => getQuote()}
-                            >
-                                Keisti
-                            </Button>
-                        ) : (
+                        {!isAuthenticated ? (
                             <Button
                                 variant="contained"
                                 color="primary"
@@ -303,6 +359,15 @@ const SwapBox = () => {
                                 onClick={() => authenticate()}
                             >
                                 Prisijungti su pinigine
+                            </Button>
+                        ) : (
+                            <Button
+                                variant="contained"
+                                color="primary"
+                                className={classes.button}
+                                onClick={() => getQuote()}
+                            >
+                                Keisti
                             </Button>
                         )}
                     </div>
