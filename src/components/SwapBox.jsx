@@ -106,6 +106,8 @@ const SwapBox = () => {
     const [balances, setBalances] = useState({});
     const [currentChain, setCurrentChain] = useState("");
     const [availableChain, setAvailableChain] = useState(true);
+    const [swapState, setSwapState] = useState("");
+    const [dex, setDex] = useState("");
     const [openSelect, setOpenSelect] = useState(false);
     const [openedSide, setOpenedSide] = useState("");
     const [selectedTokens, setSelectedTokens] = useState({
@@ -114,29 +116,13 @@ const SwapBox = () => {
     });
     const classes = useStyles();
 
-    //
-    //
-
-    //
-    //
-
     useEffect(() => {
-        axios({
-            method: "get",
-            url: "https://api.1inch.exchange/v3.0/1/tokens",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            xsrfCookieName: "XSRF-TOKEN",
-            xsrfHeaderName: "X-XSRF-TOKEN",
-        }).then((response) => {
-            const data = response.data;
-            setTokens(data.tokens);
-        });
+        initializePlugin();
     }, []);
 
     useEffect(() => {
         getQuote();
+        hasAllowance();
     }, [selectedTokens.from, selectedTokens.to.info]);
 
     useEffect(() => {
@@ -147,9 +133,32 @@ const SwapBox = () => {
         }
     }, [isWeb3Enabled]);
 
+    // TODO get tokens not only when user is authenticated
+    // TODO add drop down select chain like in 1inch
     useEffect(() => {
         if (isWeb3Enabled) {
-            fetchBalance(currentChain);
+            console.log(currentChain);
+            if (currentChain === "mainnet" || currentChain === "0x1") {
+                setCurrentChain("eth");
+            } else if (
+                currentChain === "binance" ||
+                currentChain === "binance smart chain" ||
+                currentChain === "0x38"
+            ) {
+                setCurrentChain("bsc");
+            } else if (currentChain === "matic" || currentChain === "0x89") {
+                setCurrentChain("polygon");
+            } else if (
+                currentChain === "eth" ||
+                currentChain === "bsc" ||
+                currentChain === "polygon"
+            ) {
+                setAvailableChain(true);
+                getSupportedTokens();
+                fetchBalance(currentChain);
+            } else {
+                setAvailableChain(false);
+            }
         }
     }, [currentChain]);
 
@@ -157,30 +166,131 @@ const SwapBox = () => {
         setCurrentChain(chainId);
     });
 
+    const initializePlugin = async () => {
+        await Moralis.initPlugins();
+        setDex(Moralis.Plugins.oneInch);
+    };
+
+    const getSupportedTokens = async () => {
+        const response = await dex.getSupportedTokens({
+            chain: currentChain,
+        });
+
+        if (response.success === true) {
+            setTokens(response.result.tokens);
+        }
+    };
+
     const fetchBalance = async (chainId) => {
-        if (chainId === "eth" || chainId === "mainnet" || chainId === "0x1") {
-            let balance = await Web3Api.account.getTokenBalances({
-                chain: chainId,
-            });
+        let balance = await Web3Api.account.getTokenBalances({
+            chain: chainId,
+        });
 
-            const balancesObject = balance.reduce(
-                (previousObject, currentItem) => {
-                    previousObject[currentItem.token_address] =
-                        fromIntegerStringToDecimalString(
-                            currentItem.balance,
-                            currentItem.decimals
-                        );
+        const balancesObject = balance.reduce((previousObject, currentItem) => {
+            previousObject[currentItem.token_address] =
+                fromIntegerStringToDecimalString(
+                    currentItem.balance,
+                    currentItem.decimals
+                );
 
-                    return previousObject;
-                },
-                {}
+            return previousObject;
+        }, {});
+
+        setAvailableChain(true);
+        setBalances(balancesObject);
+    };
+
+    const getQuote = async () => {
+        if (
+            selectedTokens.from.info.address &&
+            selectedTokens.to.info.address
+        ) {
+            const amountToSell = fromDecimalStringToIntegerString(
+                selectedTokens.from.amount,
+                selectedTokens.from.info.decimals
             );
 
-            setAvailableChain(true);
-            setBalances(balancesObject);
-        } else {
-            setAvailableChain(false);
+            if (Number(amountToSell) > 0) {
+                const chainUrl =
+                    currentChain === "eth"
+                        ? "1"
+                        : currentChain === "bsc"
+                        ? "56"
+                        : currentChain === "polygon"
+                        ? "137"
+                        : null;
+
+                if (chainUrl) {
+                    axios({
+                        method: "get",
+                        url: `https://api.1inch.exchange/v3.0/${chainUrl}/quote?fromTokenAddress=${selectedTokens.from.info.address}&toTokenAddress=${selectedTokens.to.info.address}&amount=${amountToSell}&fee=1`,
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        xsrfCookieName: "XSRF-TOKEN",
+                        xsrfHeaderName: "X-XSRF-TOKEN",
+                    })
+                        .then((response) => {
+                            const data = response.data;
+
+                            setSelectedTokens((currentTokens) => ({
+                                ...currentTokens,
+                                to: {
+                                    info: currentTokens.to.info,
+                                    amount: fromIntegerStringToDecimalString(
+                                        data.toTokenAmount,
+                                        data.toToken.decimals
+                                    ),
+                                },
+                            }));
+                        })
+                        .catch((error) => {
+                            // try to see available errors
+                            console.log(error.response);
+                        });
+                }
+            } else {
+                setSelectedTokens((currentTokens) => ({
+                    ...currentTokens,
+                    to: {
+                        info: currentTokens.to.info,
+                        amount: "",
+                    },
+                }));
+            }
         }
+    };
+
+    // TODO finish with allowance amount
+    const hasAllowance = async () => {
+        const response = await dex.hasAllowance({
+            chain: currentChain,
+            fromTokenAddress: selectedTokens.from.info.address, // The token user wants to swap
+            fromAddress: process.env.REACT_APP_MY_WALLET_ADDRESS, // My wallet address
+            amount: 1,
+        });
+
+        console.log(`allowance: `, response);
+    };
+
+    const approveSpender = () => {
+        axios({
+            method: "get",
+            url: `https://api.1inch.exchange/v3.0/1/approve/spender`,
+            headers: {
+                "Content-Type": "application/json",
+            },
+            xsrfCookieName: "XSRF-TOKEN",
+            xsrfHeaderName: "X-XSRF-TOKEN",
+        })
+            .then((response) => {
+                const data = response.data;
+
+                console.log("data: ", data);
+            })
+            .catch((error) => {
+                console.log(error.response);
+            });
     };
 
     const handleTokenSelectOpen = (side) => {
@@ -218,75 +328,6 @@ const SwapBox = () => {
             from: currentTokens.to,
             to: currentTokens.from,
         }));
-    };
-
-    const getQuote = () => {
-        if (
-            selectedTokens.from.info.address &&
-            selectedTokens.to.info.address
-        ) {
-            const amountToSell = fromDecimalStringToIntegerString(
-                selectedTokens.from.amount,
-                selectedTokens.from.info.decimals
-            );
-
-            if (Number(amountToSell) > 0) {
-                axios({
-                    method: "get",
-                    url: `https://api.1inch.exchange/v3.0/1/quote?fromTokenAddress=${selectedTokens.from.info.address}&toTokenAddress=${selectedTokens.to.info.address}&amount=${amountToSell}&fee=1`,
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    xsrfCookieName: "XSRF-TOKEN",
-                    xsrfHeaderName: "X-XSRF-TOKEN",
-                })
-                    .then((response) => {
-                        const data = response.data;
-
-                        setSelectedTokens((currentTokens) => ({
-                            ...currentTokens,
-                            to: {
-                                info: currentTokens.to.info,
-                                amount: fromIntegerStringToDecimalString(
-                                    data.toTokenAmount,
-                                    data.toToken.decimals
-                                ),
-                            },
-                        }));
-                    })
-                    .catch((error) => {
-                        console.log(error.response);
-                    });
-            } else {
-                setSelectedTokens((currentTokens) => ({
-                    ...currentTokens,
-                    to: {
-                        info: currentTokens.to.info,
-                        amount: "",
-                    },
-                }));
-            }
-        }
-    };
-
-    const approveSpender = () => {
-        axios({
-            method: "get",
-            url: `https://api.1inch.exchange/v3.0/1/approve/spender`,
-            headers: {
-                "Content-Type": "application/json",
-            },
-            xsrfCookieName: "XSRF-TOKEN",
-            xsrfHeaderName: "X-XSRF-TOKEN",
-        })
-            .then((response) => {
-                const data = response.data;
-
-                console.log("data: ", data);
-            })
-            .catch((error) => {
-                console.log(error.response);
-            });
     };
 
     return (
