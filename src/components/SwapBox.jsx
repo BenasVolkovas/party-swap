@@ -107,6 +107,7 @@ const SwapBox = () => {
     const [currentChain, setCurrentChain] = useState("");
     const [availableChain, setAvailableChain] = useState(true);
     const [swapState, setSwapState] = useState("");
+    const [chainUrlNumber, setChainUrlNumber] = useState("");
     const [dex, setDex] = useState("");
     const [openSelect, setOpenSelect] = useState(false);
     const [openedSide, setOpenedSide] = useState("");
@@ -120,9 +121,13 @@ const SwapBox = () => {
         initializePlugin();
     }, []);
 
+    // TODO current chain add context globally
+    // TODO go through code and see which parts only should be for:
+    // authenticated user
+    // in the available chain
     useEffect(() => {
         getQuote();
-        hasAllowance();
+        // hasAllowance();
     }, [selectedTokens.from, selectedTokens.to.info]);
 
     useEffect(() => {
@@ -133,11 +138,18 @@ const SwapBox = () => {
         }
     }, [isWeb3Enabled]);
 
+    useEffect(() => {
+        if (isAuthenticated) {
+            getSupportedTokens();
+            fetchBalance(currentChain);
+        }
+    }, [chainUrlNumber]);
+
     // TODO get tokens not only when user is authenticated
     // TODO add drop down select chain like in 1inch
     useEffect(() => {
         if (isWeb3Enabled) {
-            console.log(currentChain);
+            console.log("currentChain: ", currentChain);
             if (currentChain === "mainnet" || currentChain === "0x1") {
                 setCurrentChain("eth");
             } else if (
@@ -154,15 +166,24 @@ const SwapBox = () => {
                 currentChain === "polygon"
             ) {
                 setAvailableChain(true);
-                getSupportedTokens();
-                fetchBalance(currentChain);
+                setChainUrlNumber(
+                    currentChain === "eth"
+                        ? "1"
+                        : currentChain === "bsc"
+                        ? "56"
+                        : currentChain === "polygon"
+                        ? "137"
+                        : ""
+                );
             } else {
                 setAvailableChain(false);
+                setChainUrlNumber("");
             }
         }
     }, [currentChain]);
 
     Moralis.onChainChanged(async (chainId) => {
+        console.log("new chain: ", chainId);
         setCurrentChain(chainId);
     });
 
@@ -172,13 +193,18 @@ const SwapBox = () => {
     };
 
     const getSupportedTokens = async () => {
-        const response = await dex.getSupportedTokens({
-            chain: currentChain,
+        axios({
+            method: "get",
+            url: `https://api.1inch.exchange/v3.0/${chainUrlNumber}/tokens`,
+            headers: {
+                "Content-Type": "application/json",
+            },
+            xsrfCookieName: "XSRF-TOKEN",
+            xsrfHeaderName: "X-XSRF-TOKEN",
+        }).then((response) => {
+            const data = response.data;
+            setTokens(data.tokens);
         });
-
-        if (response.success === true) {
-            setTokens(response.result.tokens);
-        }
     };
 
     const fetchBalance = async (chainId) => {
@@ -211,19 +237,10 @@ const SwapBox = () => {
             );
 
             if (Number(amountToSell) > 0) {
-                const chainUrl =
-                    currentChain === "eth"
-                        ? "1"
-                        : currentChain === "bsc"
-                        ? "56"
-                        : currentChain === "polygon"
-                        ? "137"
-                        : null;
-
-                if (chainUrl) {
+                if (chainUrlNumber) {
                     axios({
                         method: "get",
-                        url: `https://api.1inch.exchange/v3.0/${chainUrl}/quote?fromTokenAddress=${selectedTokens.from.info.address}&toTokenAddress=${selectedTokens.to.info.address}&amount=${amountToSell}&fee=1`,
+                        url: `https://api.1inch.exchange/v3.0/${chainUrlNumber}/quote?fromTokenAddress=${selectedTokens.from.info.address}&toTokenAddress=${selectedTokens.to.info.address}&amount=${amountToSell}&fee=1`,
                         headers: {
                             "Content-Type": "application/json",
                         },
@@ -341,8 +358,9 @@ const SwapBox = () => {
                                     Netinkamas tinklas.
                                 </Typography>
                                 <Typography variant="body2">
-                                    Norėdami tęsti pasirinkite „Ethereum
-                                    mainnet“ tinklą.
+                                    Norėdami tęsti MetaMask piniginėje
+                                    pasirinkite tinklą tarp „Ethereum“, „Binance
+                                    Smart Chain“ ir „Polygon (Matic)“.
                                 </Typography>
                             </Paper>
                         </div>
