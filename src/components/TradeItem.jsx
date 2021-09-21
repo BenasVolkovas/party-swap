@@ -10,8 +10,6 @@ import Button from "@material-ui/core/Button";
 import Avatar from "@material-ui/core/Avatar";
 import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
 
-import TokenSelect from "./TokenSelect";
-
 const useStyles = makeStyles((theme) => ({
     root: {
         backgroundColor: theme.lightGrayColor.color,
@@ -160,6 +158,7 @@ const TradeItem = ({
                 ) : (
                     <Button
                         variant="outlined"
+                        endIcon={<ExpandMoreIcon />}
                         className={classes.noTokenButton}
                         onClick={() => handleTokenSelectOpen(side)}
                     >

@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { useMoralis } from "react-moralis";
+import { ChainContext } from "../helpers/Contexts";
 import { makeStyles } from "@material-ui/core/styles";
 
 import Toolbar from "@material-ui/core/Toolbar";
@@ -12,10 +13,13 @@ import Collapse from "@material-ui/core/Collapse";
 import Typography from "@material-ui/core/Typography";
 import Menu from "@material-ui/core/Menu";
 import MenuItem from "@material-ui/core/MenuItem";
-import Popover from "@material-ui/core/Popover";
+import TextField from "@material-ui/core/TextField";
+import Select from "@material-ui/core/Select";
 
+import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
 import CloseIcon from "@material-ui/icons/Close";
 
+import { availableChainOptions } from "../helpers/availableOptions";
 import Logo from "../assets/images/logo.svg";
 
 const useStyles = makeStyles((theme) => ({
@@ -49,9 +53,13 @@ const useStyles = makeStyles((theme) => ({
     alert: {
         margin: theme.spacing(1, 1, 0, 1),
     },
+    chainChangeInput: {
+        margin: theme.spacing(0, 1),
+    },
 }));
 
 const TopNav = () => {
+    const { currentChain, setCurrentChain } = useContext(ChainContext);
     const [openAuthError, setOpenAuthError] = useState(false);
     const [openWeb3Error, setOpenWeb3Error] = useState(false);
     const [anchorEl, setAnchorEl] = useState(null);
@@ -93,6 +101,11 @@ const TopNav = () => {
         }
     }, [web3EnableError]);
 
+    const updateChain = (e) => {
+        console.log(e.target.name);
+        // setCurrentChain(e.target.name);
+    };
+
     const openMenu = (event) => {
         setAnchorEl(event.currentTarget);
     };
@@ -121,6 +134,53 @@ const TopNav = () => {
                     {/* Login or logout button, depending on the authentication state */}
                     {isAuthenticated ? (
                         <div>
+                            {/* <Button
+                                variant="outlined"
+                                endIcon={<ExpandMoreIcon />}
+                                color="primary"
+                                className={classes.chainChangeButton}
+                            >
+                                {currentChain}
+                            </Button> */}
+                            {/* <TextField
+                                select
+                                SelectProps={{
+                                    IconComponent: { ExpandMoreIcon },
+                                }}
+                                margin="dense"
+                                variant="outlined"
+                                color="primary"
+                                name="chain"
+                                value={currentChain}
+                                className={classes.chainChangeInput}
+                                onChange={(e) => updateChain(e)}
+                            >
+                                {Object.keys(availableChainOptions).map(
+                                    (key) => (
+                                        <MenuItem key={key} value={key}>
+                                            {availableChainOptions[key]}
+                                        </MenuItem>
+                                    )
+                                )}
+                            </TextField> */}
+                            <Select
+                                variant="outlined"
+                                color="primary"
+                                name="chain"
+                                IconComponent={ExpandMoreIcon}
+                                z
+                                value={currentChain}
+                                className={classes.chainChangeInput}
+                                onChange={(e) => updateChain(e)}
+                            >
+                                {Object.keys(availableChainOptions).map(
+                                    (key) => (
+                                        <MenuItem key={key} value={key}>
+                                            {availableChainOptions[key]}
+                                        </MenuItem>
+                                    )
+                                )}
+                            </Select>
                             <Button
                                 variant="contained"
                                 color="primary"

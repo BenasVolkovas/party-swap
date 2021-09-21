@@ -1,3 +1,5 @@
+import { useChainNetwork } from "./hooks/useChainNetwork";
+import { ChainContext } from "./helpers/Contexts";
 import CssBaseline from "@material-ui/core/CssBaseline";
 import { ThemeProvider, createTheme } from "@material-ui/core/styles";
 import SwapView from "./views/SwapView";
@@ -80,10 +82,14 @@ const theme = createTheme({
 });
 
 function App() {
+    const chain = useChainNetwork();
     return (
         <ThemeProvider theme={theme}>
             <CssBaseline />
-            <SwapView />
+
+            <ChainContext.Provider value={chain}>
+                <SwapView />
+            </ChainContext.Provider>
         </ThemeProvider>
     );
 }

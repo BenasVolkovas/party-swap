@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { useMoralis, useMoralisWeb3Api } from "react-moralis";
+import { ChainContext } from "../helpers/Contexts";
 import { makeStyles } from "@material-ui/core/styles";
 import axios from "axios";
 
@@ -102,9 +103,9 @@ const SwapBox = () => {
         isAuthenticated,
         Moralis,
     } = useMoralis();
+    const { currentChain, setCurrentChain } = useContext(ChainContext);
     const [tokens, setTokens] = useState({});
     const [balances, setBalances] = useState({});
-    const [currentChain, setCurrentChain] = useState("");
     const [availableChain, setAvailableChain] = useState(true);
     const [swapState, setSwapState] = useState("");
     const [chainUrlNumber, setChainUrlNumber] = useState("");
@@ -119,6 +120,10 @@ const SwapBox = () => {
 
     useEffect(() => {
         initializePlugin();
+
+        Moralis.onChainChanged(async (chainId) => {
+            setCurrentChain(chainId);
+        });
     }, []);
 
     // TODO current chain add context globally
@@ -149,7 +154,6 @@ const SwapBox = () => {
     // TODO add drop down select chain like in 1inch
     useEffect(() => {
         if (isWeb3Enabled) {
-            console.log("currentChain: ", currentChain);
             if (currentChain === "mainnet" || currentChain === "0x1") {
                 setCurrentChain("eth");
             } else if (
@@ -181,11 +185,6 @@ const SwapBox = () => {
             }
         }
     }, [currentChain]);
-
-    Moralis.onChainChanged(async (chainId) => {
-        console.log("new chain: ", chainId);
-        setCurrentChain(chainId);
-    });
 
     const initializePlugin = async () => {
         await Moralis.initPlugins();
