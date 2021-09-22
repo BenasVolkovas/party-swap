@@ -56,6 +56,14 @@ const useStyles = makeStyles((theme) => ({
     chainChangeInput: {
         margin: theme.spacing(0, 1),
     },
+    icon: {
+        color: theme.blackColor.color,
+    },
+    actionArea: {
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+    },
 }));
 
 const TopNav = () => {
@@ -65,6 +73,7 @@ const TopNav = () => {
     const [anchorEl, setAnchorEl] = useState(null);
     const [shortAddress, setShortAddress] = useState("");
     const {
+        web3,
         enableWeb3,
         web3EnableError,
         authenticate,
@@ -102,8 +111,7 @@ const TopNav = () => {
     }, [web3EnableError]);
 
     const updateChain = (e) => {
-        console.log(e.target.name);
-        // setCurrentChain(e.target.name);
+        setCurrentChain(e.target.value);
     };
 
     const openMenu = (event) => {
@@ -132,58 +140,48 @@ const TopNav = () => {
                     </Typography>
 
                     {/* Login or logout button, depending on the authentication state */}
+
+                    <div className={classes.actionArea}>
+                        <Select
+                            margin="dense"
+                            variant="outlined"
+                            color="primary"
+                            name="chain"
+                            IconComponent={ExpandMoreIcon}
+                            MenuProps={{
+                                anchorOrigin: {
+                                    vertical: "bottom",
+                                    horizontal: "right",
+                                },
+                                transformOrigin: {
+                                    vertical: "top",
+                                    horizontal: "right",
+                                },
+                                getContentAnchorEl: null,
+                            }}
+                            inputProps={{
+                                classes: {
+                                    icon: classes.icon,
+                                },
+                            }}
+                            value={currentChain}
+                            classes={{ root: classes.input }}
+                            className={classes.chainChangeInput}
+                            onChange={(e) => updateChain(e)}
+                        >
+                            {Object.keys(availableChainOptions).map((key) => (
+                                <MenuItem key={key} value={key}>
+                                    {availableChainOptions[key]}
+                                </MenuItem>
+                            ))}
+                        </Select>
+                    </div>
                     {isAuthenticated ? (
                         <div>
-                            {/* <Button
-                                variant="outlined"
-                                endIcon={<ExpandMoreIcon />}
-                                color="primary"
-                                className={classes.chainChangeButton}
-                            >
-                                {currentChain}
-                            </Button> */}
-                            {/* <TextField
-                                select
-                                SelectProps={{
-                                    IconComponent: { ExpandMoreIcon },
-                                }}
-                                margin="dense"
-                                variant="outlined"
-                                color="primary"
-                                name="chain"
-                                value={currentChain}
-                                className={classes.chainChangeInput}
-                                onChange={(e) => updateChain(e)}
-                            >
-                                {Object.keys(availableChainOptions).map(
-                                    (key) => (
-                                        <MenuItem key={key} value={key}>
-                                            {availableChainOptions[key]}
-                                        </MenuItem>
-                                    )
-                                )}
-                            </TextField> */}
-                            <Select
-                                variant="outlined"
-                                color="primary"
-                                name="chain"
-                                IconComponent={ExpandMoreIcon}
-                                z
-                                value={currentChain}
-                                className={classes.chainChangeInput}
-                                onChange={(e) => updateChain(e)}
-                            >
-                                {Object.keys(availableChainOptions).map(
-                                    (key) => (
-                                        <MenuItem key={key} value={key}>
-                                            {availableChainOptions[key]}
-                                        </MenuItem>
-                                    )
-                                )}
-                            </Select>
                             <Button
                                 variant="contained"
                                 color="primary"
+                                className={classes.actionButton}
                                 onClick={(e) => openMenu(e)}
                             >
                                 {shortAddress}
@@ -212,6 +210,7 @@ const TopNav = () => {
                             variant="contained"
                             color="primary"
                             disabled={isAuthenticating}
+                            className={classes.actionButton}
                             onClick={() => authenticate()}
                         >
                             Prisijungti su pinigine

@@ -17,6 +17,7 @@ import SwapVertIcon from "@material-ui/icons/SwapVert";
 
 import TradeItem from "./TradeItem";
 import TokenSelect from "./TokenSelect";
+import { convertChainToSymbol } from "../helpers/convertChainToSymbol";
 
 const useStyles = makeStyles((theme) => ({
     rootBox: {
@@ -126,7 +127,6 @@ const SwapBox = () => {
         });
     }, []);
 
-    // TODO current chain add context globally
     // TODO go through code and see which parts only should be for:
     // authenticated user
     // in the available chain
@@ -136,7 +136,6 @@ const SwapBox = () => {
     }, [selectedTokens.from, selectedTokens.to.info]);
 
     useEffect(() => {
-        console.log("Enabled: ", isWeb3Enabled);
         if (isWeb3Enabled) {
             const chainId = web3.currentProvider.chainId;
             setCurrentChain(chainId);
@@ -144,44 +143,40 @@ const SwapBox = () => {
     }, [isWeb3Enabled]);
 
     useEffect(() => {
-        if (isAuthenticated) {
+        if (isAuthenticated && chainUrlNumber !== "") {
             getSupportedTokens();
-            fetchBalance(currentChain);
+            fetchBalance();
         }
     }, [chainUrlNumber]);
 
     // TODO get tokens not only when user is authenticated
-    // TODO add drop down select chain like in 1inch
     useEffect(() => {
         if (isWeb3Enabled) {
-            if (currentChain === "mainnet" || currentChain === "0x1") {
-                setCurrentChain("eth");
-            } else if (
-                currentChain === "binance" ||
-                currentChain === "binance smart chain" ||
-                currentChain === "0x38"
-            ) {
-                setCurrentChain("bsc");
-            } else if (currentChain === "matic" || currentChain === "0x89") {
-                setCurrentChain("polygon");
-            } else if (
-                currentChain === "eth" ||
-                currentChain === "bsc" ||
-                currentChain === "polygon"
-            ) {
-                setAvailableChain(true);
-                setChainUrlNumber(
-                    currentChain === "eth"
-                        ? "1"
-                        : currentChain === "bsc"
-                        ? "56"
-                        : currentChain === "polygon"
-                        ? "137"
-                        : ""
+            const curentChainStatus = convertChainToSymbol(currentChain);
+
+            if (curentChainStatus.change) {
+                setCurrentChain(curentChainStatus.symbol);
+            } else if (curentChainStatus.available) {
+                const metamaskChain = convertChainToSymbol(
+                    web3.currentProvider.chainId
                 );
+
+                if (currentChain === metamaskChain.symbol) {
+                    setAvailableChain(true);
+                    setChainUrlNumber(
+                        currentChain === "eth"
+                            ? "1"
+                            : currentChain === "bsc"
+                            ? "56"
+                            : currentChain === "polygon"
+                            ? "137"
+                            : ""
+                    );
+                } else {
+                    setAvailableChain(false);
+                }
             } else {
                 setAvailableChain(false);
-                setChainUrlNumber("");
             }
         }
     }, [currentChain]);
@@ -192,23 +187,27 @@ const SwapBox = () => {
     };
 
     const getSupportedTokens = async () => {
-        axios({
-            method: "get",
-            url: `https://api.1inch.exchange/v3.0/${chainUrlNumber}/tokens`,
-            headers: {
-                "Content-Type": "application/json",
-            },
-            xsrfCookieName: "XSRF-TOKEN",
-            xsrfHeaderName: "X-XSRF-TOKEN",
-        }).then((response) => {
-            const data = response.data;
-            setTokens(data.tokens);
-        });
+        if (chainUrlNumber) {
+            axios({
+                method: "get",
+                url: `https://api.1inch.exchange/v3.0/${chainUrlNumber}/tokens`,
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                xsrfCookieName: "XSRF-TOKEN",
+                xsrfHeaderName: "X-XSRF-TOKEN",
+            }).then((response) => {
+                const data = response.data;
+                setTokens(data.tokens);
+            });
+        } else {
+            console.log("No chain url");
+        }
     };
 
-    const fetchBalance = async (chainId) => {
+    const fetchBalance = async () => {
         let balance = await Web3Api.account.getTokenBalances({
-            chain: chainId,
+            chain: currentChain,
         });
 
         const balancesObject = balance.reduce((previousObject, currentItem) => {
@@ -264,6 +263,8 @@ const SwapBox = () => {
                             // try to see available errors
                             console.log(error.response);
                         });
+                } else {
+                    console.log("No chain url");
                 }
             } else {
                 setSelectedTokens((currentTokens) => ({
@@ -287,26 +288,6 @@ const SwapBox = () => {
         });
 
         console.log(`allowance: `, response);
-    };
-
-    const approveSpender = () => {
-        axios({
-            method: "get",
-            url: `https://api.1inch.exchange/v3.0/1/approve/spender`,
-            headers: {
-                "Content-Type": "application/json",
-            },
-            xsrfCookieName: "XSRF-TOKEN",
-            xsrfHeaderName: "X-XSRF-TOKEN",
-        })
-            .then((response) => {
-                const data = response.data;
-
-                console.log("data: ", data);
-            })
-            .catch((error) => {
-                console.log(error.response);
-            });
     };
 
     const handleTokenSelectOpen = (side) => {
