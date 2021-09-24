@@ -31,3 +31,19 @@ export const convertChainToSymbol = (chain) => {
 
     return { symbol, change, available };
 };
+
+export const convertChainToUrl = (chain) => {
+    let urlParam;
+
+    if (chain === "eth") {
+        urlParam = "1";
+    } else if (chain === "bsc") {
+        urlParam = "56";
+    } else if (chain === "polygon") {
+        urlParam = "137";
+    } else {
+        urlParam = "";
+    }
+
+    return urlParam;
+};

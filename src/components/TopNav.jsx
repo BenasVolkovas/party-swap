@@ -22,6 +22,8 @@ import CloseIcon from "@material-ui/icons/Close";
 import { availableChainOptions } from "../helpers/availableOptions";
 import Logo from "../assets/images/logo.svg";
 
+import { convertChainToSymbol, convertChainToUrl } from "../helpers/functions";
+
 const useStyles = makeStyles((theme) => ({
     root: {
         flexGrow: 1,
@@ -67,7 +69,8 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const TopNav = () => {
-    const { currentChain, setCurrentChain } = useContext(ChainContext);
+    const { currentChain, setCurrentChain, availableChain, setAvailableChain } =
+        useContext(ChainContext);
     const [openAuthError, setOpenAuthError] = useState(false);
     const [openWeb3Error, setOpenWeb3Error] = useState(false);
     const [anchorEl, setAnchorEl] = useState(null);
@@ -75,6 +78,7 @@ const TopNav = () => {
     const {
         web3,
         enableWeb3,
+        isWeb3Enabled,
         web3EnableError,
         authenticate,
         isAuthenticated,
@@ -86,9 +90,11 @@ const TopNav = () => {
     const classes = useStyles();
 
     useEffect(() => {
-        if (isAuthenticated) {
-            enableWeb3();
+        enableWeb3();
+    }, []);
 
+    useEffect(() => {
+        if (isAuthenticated) {
             const address = user.attributes.ethAddress;
             setShortAddress(
                 address.substr(0, 6) +
@@ -141,41 +147,45 @@ const TopNav = () => {
 
                     {/* Login or logout button, depending on the authentication state */}
 
-                    <div className={classes.actionArea}>
-                        <Select
-                            margin="dense"
-                            variant="outlined"
-                            color="primary"
-                            name="chain"
-                            IconComponent={ExpandMoreIcon}
-                            MenuProps={{
-                                anchorOrigin: {
-                                    vertical: "bottom",
-                                    horizontal: "right",
-                                },
-                                transformOrigin: {
-                                    vertical: "top",
-                                    horizontal: "right",
-                                },
-                                getContentAnchorEl: null,
-                            }}
-                            inputProps={{
-                                classes: {
-                                    icon: classes.icon,
-                                },
-                            }}
-                            value={currentChain}
-                            classes={{ root: classes.input }}
-                            className={classes.chainChangeInput}
-                            onChange={(e) => updateChain(e)}
-                        >
-                            {Object.keys(availableChainOptions).map((key) => (
-                                <MenuItem key={key} value={key}>
-                                    {availableChainOptions[key]}
-                                </MenuItem>
-                            ))}
-                        </Select>
-                    </div>
+                    {availableChain && (
+                        <div className={classes.actionArea}>
+                            <Select
+                                margin="dense"
+                                variant="outlined"
+                                color="primary"
+                                name="chain"
+                                IconComponent={ExpandMoreIcon}
+                                MenuProps={{
+                                    anchorOrigin: {
+                                        vertical: "bottom",
+                                        horizontal: "right",
+                                    },
+                                    transformOrigin: {
+                                        vertical: "top",
+                                        horizontal: "right",
+                                    },
+                                    getContentAnchorEl: null,
+                                }}
+                                inputProps={{
+                                    classes: {
+                                        icon: classes.icon,
+                                    },
+                                }}
+                                value={currentChain}
+                                classes={{ root: classes.input }}
+                                className={classes.chainChangeInput}
+                                onChange={(e) => updateChain(e)}
+                            >
+                                {Object.keys(availableChainOptions).map(
+                                    (key) => (
+                                        <MenuItem key={key} value={key}>
+                                            {availableChainOptions[key]}
+                                        </MenuItem>
+                                    )
+                                )}
+                            </Select>
+                        </div>
+                    )}
                     {isAuthenticated ? (
                         <div>
                             <Button

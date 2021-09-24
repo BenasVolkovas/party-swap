@@ -17,7 +17,7 @@ import SwapVertIcon from "@material-ui/icons/SwapVert";
 
 import TradeItem from "./TradeItem";
 import TokenSelect from "./TokenSelect";
-import { convertChainToSymbol } from "../helpers/convertChainToSymbol";
+import { convertChainToSymbol, convertChainToUrl } from "../helpers/functions";
 
 const useStyles = makeStyles((theme) => ({
     rootBox: {
@@ -104,12 +104,12 @@ const SwapBox = () => {
         isAuthenticated,
         Moralis,
     } = useMoralis();
-    const { currentChain, setCurrentChain } = useContext(ChainContext);
+    const { currentChain, setCurrentChain, availableChain, setAvailableChain } =
+        useContext(ChainContext);
     const [tokens, setTokens] = useState({});
     const [balances, setBalances] = useState({});
-    const [availableChain, setAvailableChain] = useState(true);
     const [swapState, setSwapState] = useState("");
-    const [chainUrlNumber, setChainUrlNumber] = useState("");
+    const [chainUrlNumber, setChainUrlNumber] = useState("1"); // 1 is ehtereum mainnet network api for 1inch
     const [dex, setDex] = useState("");
     const [openSelect, setOpenSelect] = useState(false);
     const [openedSide, setOpenedSide] = useState("");
@@ -127,33 +127,33 @@ const SwapBox = () => {
         });
     }, []);
 
+    console.log("web3 ", isWeb3Enabled);
+
     // TODO go through code and see which parts only should be for:
-    // authenticated user
     // in the available chain
     useEffect(() => {
         getQuote();
-        // hasAllowance();
+        // hasAllowance(); // move to get Quote function
     }, [selectedTokens.from, selectedTokens.to.info]);
 
     useEffect(() => {
         if (isWeb3Enabled) {
-            const chainId = web3.currentProvider.chainId;
-            setCurrentChain(chainId);
+            if (isAuthenticated) {
+                const chainId = web3.currentProvider.chainId;
+                setCurrentChain(chainId);
+            } else {
+                setCurrentChain("eth");
+            }
         }
-    }, [isWeb3Enabled]);
+    }, [isWeb3Enabled, isAuthenticated]);
 
     useEffect(() => {
-        if (isAuthenticated && chainUrlNumber !== "") {
-            getSupportedTokens();
-            fetchBalance();
-        }
+        getSupportedTokens();
     }, [chainUrlNumber]);
 
-    // TODO get tokens not only when user is authenticated
     useEffect(() => {
-        if (isWeb3Enabled) {
+        if (isAuthenticated && isWeb3Enabled) {
             const curentChainStatus = convertChainToSymbol(currentChain);
-
             if (curentChainStatus.change) {
                 setCurrentChain(curentChainStatus.symbol);
             } else if (curentChainStatus.available) {
@@ -163,21 +163,17 @@ const SwapBox = () => {
 
                 if (currentChain === metamaskChain.symbol) {
                     setAvailableChain(true);
-                    setChainUrlNumber(
-                        currentChain === "eth"
-                            ? "1"
-                            : currentChain === "bsc"
-                            ? "56"
-                            : currentChain === "polygon"
-                            ? "137"
-                            : ""
-                    );
+                    fetchBalance();
+                    setChainUrlNumber(convertChainToUrl(currentChain));
                 } else {
                     setAvailableChain(false);
                 }
             } else {
                 setAvailableChain(false);
             }
+        } else {
+            setAvailableChain(true);
+            setChainUrlNumber(convertChainToUrl(currentChain));
         }
     }, [currentChain]);
 
@@ -200,8 +196,6 @@ const SwapBox = () => {
                 const data = response.data;
                 setTokens(data.tokens);
             });
-        } else {
-            console.log("No chain url");
         }
     };
 
@@ -220,7 +214,6 @@ const SwapBox = () => {
             return previousObject;
         }, {});
 
-        setAvailableChain(true);
         setBalances(balancesObject);
     };
 
@@ -263,8 +256,6 @@ const SwapBox = () => {
                             // try to see available errors
                             console.log(error.response);
                         });
-                } else {
-                    console.log("No chain url");
                 }
             } else {
                 setSelectedTokens((currentTokens) => ({
