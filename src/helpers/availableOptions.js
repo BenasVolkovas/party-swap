@@ -3,3 +3,5 @@ export const availableChainOptions = {
     bsc: "Binance Smart Chain",
     polygon: "Polygon (Matic)",
 };
+
+export const availableUnitOptions = {};

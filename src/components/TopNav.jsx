@@ -69,8 +69,14 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const TopNav = () => {
-    const { currentChain, setCurrentChain, availableChain, setAvailableChain } =
-        useContext(ChainContext);
+    const {
+        currentChain,
+        setCurrentChain,
+        availableChain,
+        setAvailableChain,
+        showNetworkMessage,
+        setShowNetworkMessage,
+    } = useContext(ChainContext);
     const [openAuthError, setOpenAuthError] = useState(false);
     const [openWeb3Error, setOpenWeb3Error] = useState(false);
     const [anchorEl, setAnchorEl] = useState(null);
@@ -228,6 +234,31 @@ const TopNav = () => {
                     )}
                 </Toolbar>
             </AppBar>
+
+            {showNetworkMessage && (
+                <Collapse in={showNetworkMessage}>
+                    <Alert
+                        severity="info"
+                        className={classes.alert}
+                        action={
+                            <IconButton
+                                aria-label="close"
+                                color="inherit"
+                                size="small"
+                                onClick={() => {
+                                    setShowNetworkMessage(false);
+                                }}
+                            >
+                                <CloseIcon fontSize="inherit" />
+                            </IconButton>
+                        }
+                    >
+                        <AlertTitle>Tinklo pakeitimas</AlertTitle>
+                        Tinklas neatitinka Metamesk piniginėje pasirinkto
+                        tinklo. Pakeiskite tinklą piniginėje arba programoje.
+                    </Alert>
+                </Collapse>
+            )}
 
             {/* Authentication errors occur when user does not provide sinature to the request  */}
             {authError && (

@@ -104,13 +104,19 @@ const SwapBox = () => {
         isAuthenticated,
         Moralis,
     } = useMoralis();
-    const { currentChain, setCurrentChain, availableChain, setAvailableChain } =
-        useContext(ChainContext);
+    const {
+        currentChain,
+        setCurrentChain,
+        availableChain,
+        setAvailableChain,
+        setShowNetworkMessage,
+    } = useContext(ChainContext);
     const [tokens, setTokens] = useState({});
     const [balances, setBalances] = useState({});
     const [swapState, setSwapState] = useState("");
     const [chainUrlNumber, setChainUrlNumber] = useState("1"); // 1 is ehtereum mainnet network api for 1inch
     const [dex, setDex] = useState("");
+    const [enoughAllowance, setEnoughAllowance] = useState(false);
     const [openSelect, setOpenSelect] = useState(false);
     const [openedSide, setOpenedSide] = useState("");
     const [selectedTokens, setSelectedTokens] = useState({
@@ -127,13 +133,9 @@ const SwapBox = () => {
         });
     }, []);
 
-    console.log("web3 ", isWeb3Enabled);
-
-    // TODO go through code and see which parts only should be for:
-    // in the available chain
     useEffect(() => {
         getQuote();
-        // hasAllowance(); // move to get Quote function
+        checkAllowance();
     }, [selectedTokens.from, selectedTokens.to.info]);
 
     useEffect(() => {
@@ -165,13 +167,15 @@ const SwapBox = () => {
                     setAvailableChain(true);
                     fetchBalance();
                     setChainUrlNumber(convertChainToUrl(currentChain));
+                    setShowNetworkMessage(false);
                 } else {
-                    setAvailableChain(false);
+                    setShowNetworkMessage(true);
                 }
             } else {
                 setAvailableChain(false);
             }
         } else {
+            // else current chain will always be one from select list
             setAvailableChain(true);
             setChainUrlNumber(convertChainToUrl(currentChain));
         }
@@ -219,6 +223,7 @@ const SwapBox = () => {
 
     const getQuote = async () => {
         if (
+            chainUrlNumber &&
             selectedTokens.from.info.address &&
             selectedTokens.to.info.address
         ) {
@@ -228,35 +233,32 @@ const SwapBox = () => {
             );
 
             if (Number(amountToSell) > 0) {
-                if (chainUrlNumber) {
-                    axios({
-                        method: "get",
-                        url: `https://api.1inch.exchange/v3.0/${chainUrlNumber}/quote?fromTokenAddress=${selectedTokens.from.info.address}&toTokenAddress=${selectedTokens.to.info.address}&amount=${amountToSell}&fee=1`,
-                        headers: {
-                            "Content-Type": "application/json",
-                        },
-                        xsrfCookieName: "XSRF-TOKEN",
-                        xsrfHeaderName: "X-XSRF-TOKEN",
-                    })
-                        .then((response) => {
-                            const data = response.data;
+                axios({
+                    method: "get",
+                    url: `https://api.1inch.exchange/v3.0/${chainUrlNumber}/quote?fromTokenAddress=${selectedTokens.from.info.address}&toTokenAddress=${selectedTokens.to.info.address}&amount=${amountToSell}&fee=1`,
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    xsrfCookieName: "XSRF-TOKEN",
+                    xsrfHeaderName: "X-XSRF-TOKEN",
+                })
+                    .then((response) => {
+                        const data = response.data;
 
-                            setSelectedTokens((currentTokens) => ({
-                                ...currentTokens,
-                                to: {
-                                    info: currentTokens.to.info,
-                                    amount: fromIntegerStringToDecimalString(
-                                        data.toTokenAmount,
-                                        data.toToken.decimals
-                                    ),
-                                },
-                            }));
-                        })
-                        .catch((error) => {
-                            // try to see available errors
-                            console.log(error.response);
-                        });
-                }
+                        setSelectedTokens((currentTokens) => ({
+                            ...currentTokens,
+                            to: {
+                                info: currentTokens.to.info,
+                                amount: fromIntegerStringToDecimalString(
+                                    data.toTokenAmount,
+                                    data.toToken.decimals
+                                ),
+                            },
+                        }));
+                    })
+                    .catch((error) => {
+                        console.log("error res.: ", error.response);
+                    });
             } else {
                 setSelectedTokens((currentTokens) => ({
                     ...currentTokens,
@@ -270,15 +272,32 @@ const SwapBox = () => {
     };
 
     // TODO finish with allowance amount
-    const hasAllowance = async () => {
-        const response = await dex.hasAllowance({
-            chain: currentChain,
-            fromTokenAddress: selectedTokens.from.info.address, // The token user wants to swap
-            fromAddress: process.env.REACT_APP_MY_WALLET_ADDRESS, // My wallet address
-            amount: 1,
-        });
+    const checkAllowance = async () => {
+        if (
+            chainUrlNumber &&
+            selectedTokens.from.info.address &&
+            selectedTokens.to.info.address
+        ) {
+            const amountToSell = parseInt(
+                fromDecimalStringToIntegerString(
+                    selectedTokens.from.amount,
+                    selectedTokens.from.info.decimals
+                )
+            );
 
-        console.log(`allowance: `, response);
+            if (amountToSell > 0) {
+                const response = await dex.hasAllowance({
+                    chain: currentChain,
+                    fromTokenAddress: selectedTokens.from.info.address, // The token user wants to swap
+                    fromAddress: process.env.REACT_APP_MY_WALLET_ADDRESS, // My wallet address
+                    amount: amountToSell,
+                });
+
+                if (response.success) {
+                    setEnoughAllowance(response.result);
+                }
+            }
+        }
     };
 
     const handleTokenSelectOpen = (side) => {
@@ -305,6 +324,17 @@ const SwapBox = () => {
     };
 
     const updateSelectedTokenAmount = (side, amount) => {
+        const tokenDecimals = selectedTokens[side].info.decimals;
+        const dotPlace = amount.indexOf(".");
+        const decimalsFound = amount.length - (dotPlace + 1);
+
+        if (decimalsFound > tokenDecimals) {
+            amount = amount
+                .split("")
+                .slice(0, dotPlace + tokenDecimals + 1)
+                .join("");
+        }
+
         setSelectedTokens((currentTokens) => ({
             ...currentTokens,
             [side]: { ...currentTokens[side], amount: amount },
