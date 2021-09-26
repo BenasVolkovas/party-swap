@@ -116,7 +116,8 @@ const SwapBox = () => {
     const [swapState, setSwapState] = useState("");
     const [chainUrlNumber, setChainUrlNumber] = useState("1"); // 1 is ehtereum mainnet network api for 1inch
     const [dex, setDex] = useState("");
-    const [enoughAllowance, setEnoughAllowance] = useState(false);
+    const [enoughAllowance, setEnoughAllowance] = useState(true);
+    const [enoughBalance, setEnoughBalance] = useState(true);
     const [openSelect, setOpenSelect] = useState(false);
     const [openedSide, setOpenedSide] = useState("");
     const [selectedTokens, setSelectedTokens] = useState({
@@ -136,6 +137,7 @@ const SwapBox = () => {
     useEffect(() => {
         getQuote();
         checkAllowance();
+        checkBalance();
     }, [selectedTokens.from, selectedTokens.to.info]);
 
     useEffect(() => {
@@ -271,13 +273,8 @@ const SwapBox = () => {
         }
     };
 
-    // TODO finish with allowance amount
     const checkAllowance = async () => {
-        if (
-            chainUrlNumber &&
-            selectedTokens.from.info.address &&
-            selectedTokens.to.info.address
-        ) {
+        if (selectedTokens.from.info.address) {
             const amountToSell = parseInt(
                 fromDecimalStringToIntegerString(
                     selectedTokens.from.amount,
@@ -298,6 +295,35 @@ const SwapBox = () => {
                 }
             }
         }
+    };
+
+    const checkBalance = () => {
+        const inputAmount = parseInt(
+            fromDecimalStringToIntegerString(
+                selectedTokens.from.amount,
+                selectedTokens.from.info.decimals
+            )
+        );
+        const balanceAmount = parseInt(
+            fromDecimalStringToIntegerString(
+                balances[selectedTokens.from.info.address],
+                selectedTokens.from.info.decimals
+            )
+        );
+
+        if (inputAmount <= balanceAmount) {
+            setEnoughBalance(true);
+        } else {
+            setEnoughBalance(false);
+        }
+    };
+
+    const approveTransaction = async () => {
+        await dex.approve({
+            chain: currentChain,
+            tokenAddress: selectedTokens.from.info.address,
+            fromAddress: process.env.REACT_APP_MY_WALLET_ADDRESS,
+        });
     };
 
     const handleTokenSelectOpen = (side) => {
@@ -419,6 +445,15 @@ const SwapBox = () => {
                                 onClick={() => authenticate()}
                             >
                                 Prisijungti su pinigine
+                            </Button>
+                        ) : !enoughBalance ? (
+                            <Button
+                                disabled
+                                variant="contained"
+                                color="primary"
+                                className={classes.button}
+                            >
+                                Nepakankamas valiutos balansas
                             </Button>
                         ) : (
                             <Button
