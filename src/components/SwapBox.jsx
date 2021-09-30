@@ -166,6 +166,11 @@ const SwapBox = () => {
                 );
 
                 if (currentChain === metamaskChain.symbol) {
+                    setSelectedTokens({
+                        from: { info: {}, amount: "" },
+                        to: { info: {}, amount: "" },
+                    });
+
                     setAvailableChain(true);
                     fetchBalance();
                     setChainUrlNumber(convertChainToUrl(currentChain));
@@ -243,24 +248,20 @@ const SwapBox = () => {
                     },
                     xsrfCookieName: "XSRF-TOKEN",
                     xsrfHeaderName: "X-XSRF-TOKEN",
-                })
-                    .then((response) => {
-                        const data = response.data;
+                }).then((response) => {
+                    const data = response.data;
 
-                        setSelectedTokens((currentTokens) => ({
-                            ...currentTokens,
-                            to: {
-                                info: currentTokens.to.info,
-                                amount: fromIntegerStringToDecimalString(
-                                    data.toTokenAmount,
-                                    data.toToken.decimals
-                                ),
-                            },
-                        }));
-                    })
-                    .catch((error) => {
-                        console.log("error res.: ", error.response);
-                    });
+                    setSelectedTokens((currentTokens) => ({
+                        ...currentTokens,
+                        to: {
+                            info: currentTokens.to.info,
+                            amount: fromIntegerStringToDecimalString(
+                                data.toTokenAmount,
+                                data.toToken.decimals
+                            ),
+                        },
+                    }));
+                });
             } else {
                 setSelectedTokens((currentTokens) => ({
                     ...currentTokens,
@@ -318,12 +319,41 @@ const SwapBox = () => {
         }
     };
 
-    const approveTransaction = async () => {
+    const approveSwap = async () => {
         await dex.approve({
             chain: currentChain,
             tokenAddress: selectedTokens.from.info.address,
             fromAddress: process.env.REACT_APP_MY_WALLET_ADDRESS,
         });
+    };
+
+    const swapTransaction = () => {
+        if (
+            chainUrlNumber &&
+            selectedTokens.from.info.address &&
+            selectedTokens.to.info.address
+        ) {
+            const amountToSell = fromDecimalStringToIntegerString(
+                selectedTokens.from.amount,
+                selectedTokens.from.info.decimals
+            );
+
+            if (Number(amountToSell) > 0) {
+                axios({
+                    method: "get",
+                    url: `https://api.1inch.exchange/v3.0/${chainUrlNumber}/swap?fromTokenAddress=${selectedTokens.from.info.address}&toTokenAddress=${selectedTokens.to.info.address}&amount=${amountToSell}&fromAddres=${process.env.REACT_APP_MY_WALLET_ADDRESS}&fee=1`,
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    xsrfCookieName: "XSRF-TOKEN",
+                    xsrfHeaderName: "X-XSRF-TOKEN",
+                }).then((response) => {
+                    const data = response.data;
+
+                    console.log("Swap data: ", data);
+                });
+            }
+        }
     };
 
     const handleTokenSelectOpen = (side) => {
@@ -455,12 +485,21 @@ const SwapBox = () => {
                             >
                                 Nepakankamas valiutos balansas
                             </Button>
+                        ) : !enoughAllowance ? (
+                            <Button
+                                variant="contained"
+                                color="primary"
+                                className={classes.button}
+                                onClick={() => approveSwap()}
+                            >
+                                Įgalinti puslapį
+                            </Button>
                         ) : (
                             <Button
                                 variant="contained"
                                 color="primary"
                                 className={classes.button}
-                                onClick={() => getQuote()}
+                                onClick={() => swapTransaction()}
                             >
                                 Keisti
                             </Button>
