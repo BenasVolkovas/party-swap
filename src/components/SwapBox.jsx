@@ -1,5 +1,9 @@
 import { useState, useEffect, useContext } from "react";
-import { useMoralis, useMoralisWeb3Api } from "react-moralis";
+import {
+    useMoralis,
+    useMoralisWeb3Api,
+    useMoralisWeb3ApiCall,
+} from "react-moralis";
 import { ChainContext } from "../helpers/Contexts";
 import { makeStyles } from "@material-ui/core/styles";
 import axios from "axios";
@@ -96,6 +100,7 @@ const fromIntegerStringToDecimalString = (number, decimal) => {
 
 const SwapBox = () => {
     const Web3Api = useMoralisWeb3Api();
+
     const {
         web3,
         enableWeb3,
@@ -136,8 +141,8 @@ const SwapBox = () => {
 
     useEffect(() => {
         getQuote();
-        checkAllowance();
         checkBalance();
+        checkAllowance();
     }, [selectedTokens.from, selectedTokens.to.info]);
 
     useEffect(() => {
@@ -172,7 +177,6 @@ const SwapBox = () => {
                     });
 
                     setAvailableChain(true);
-                    fetchBalance();
                     setChainUrlNumber(convertChainToUrl(currentChain));
                     setShowNetworkMessage(false);
                 } else {
@@ -187,6 +191,10 @@ const SwapBox = () => {
             setChainUrlNumber(convertChainToUrl(currentChain));
         }
     }, [currentChain]);
+
+    useEffect(() => {
+        fetchBalance();
+    }, [tokens]);
 
     const initializePlugin = async () => {
         await Moralis.initPlugins();
@@ -211,7 +219,7 @@ const SwapBox = () => {
     };
 
     const fetchBalance = async () => {
-        let balance = await Web3Api.account.getTokenBalances({
+        const balance = await Web3Api.account.getTokenBalances({
             chain: currentChain,
         });
 
@@ -224,6 +232,19 @@ const SwapBox = () => {
 
             return previousObject;
         }, {});
+
+        const nativeBalance = await Web3Api.account.getNativeBalance({
+            chain: currentChain,
+        });
+
+        if (nativeBalance.balance > 0) {
+            balancesObject["0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"] =
+                fromIntegerStringToDecimalString(
+                    nativeBalance.balance,
+                    tokens["0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"]
+                        .decimals
+                );
+        }
 
         setBalances(balancesObject);
     };
@@ -291,7 +312,11 @@ const SwapBox = () => {
                     amount: amountToSell,
                 });
 
+                // TODO handle error
+                console.log(response);
+
                 if (response.success) {
+                    console.log(response);
                     setEnoughAllowance(response.result);
                 }
             }
