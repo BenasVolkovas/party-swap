@@ -118,7 +118,6 @@ const SwapBox = () => {
     } = useContext(ChainContext);
     const [tokens, setTokens] = useState({});
     const [balances, setBalances] = useState({});
-    const [swapState, setSwapState] = useState("");
     const [chainUrlNumber, setChainUrlNumber] = useState("1"); // 1 is ehtereum mainnet network api for 1inch
     const [dex, setDex] = useState("");
     const [amountToSell, setAmountToSell] = useState(0);
@@ -218,6 +217,8 @@ const SwapBox = () => {
                 setTokens(data.tokens);
             });
         }
+
+        console.log(web3);
     };
 
     const fetchBalance = async () => {
@@ -251,6 +252,7 @@ const SwapBox = () => {
         setBalances(balancesObject);
     };
 
+    // TODO change the gas price (test in swagger)/ test swap and get response
     const getQuote = async () => {
         if (
             chainUrlNumber &&
@@ -293,24 +295,33 @@ const SwapBox = () => {
     };
 
     const checkAllowance = async () => {
-        setEnoughAllowance(false);
-        // if (selectedTokens.from.info.address) {
-        //     if (amountToSell > 0) {
-        //         const response = await dex.hasAllowance({
-        //             chain: currentChain,
-        //             fromTokenAddress: selectedTokens.from.info.address, // The token user wants to swap
-        //             fromAddress: user.attributes.ethAddress, // User wallet address
-        //             amount: amountToSell,
-        //         });
-        //         // TODO handle error
-        //         console.log(response);
-        //         if (response.success && typeof response.result === "boolean") {
-        //             setEnoughAllowance(response.result);
-        //         } else {
-        //             setEnoughAllowance(false);
-        //         }
-        //     }
-        // }
+        if (selectedTokens.from.info.address) {
+            if (
+                selectedTokens.from.info.address ===
+                "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+            ) {
+                setEnoughAllowance(true);
+            } else {
+                if (amountToSell > 0) {
+                    const response = await dex.hasAllowance({
+                        chain: currentChain,
+                        fromTokenAddress: selectedTokens.from.info.address, // The token user wants to swap
+                        fromAddress: user.attributes.ethAddress, // User wallet address
+                        amount: amountToSell,
+                    });
+                    // TODO handle error
+                    console.log(response);
+                    if (
+                        response.success &&
+                        typeof response.result === "boolean"
+                    ) {
+                        setEnoughAllowance(response.result);
+                    } else {
+                        setEnoughAllowance(false);
+                    }
+                }
+            }
+        }
     };
 
     const checkBalance = () => {
@@ -338,46 +349,11 @@ const SwapBox = () => {
 
     const approveSwap = async () => {
         console.log(`approve`);
-        // const response = await dex.approve({
-        //     chain: currentChain,
-        //     tokenAddress: selectedTokens.from.info.address,
-        //     fromAddress: user.attributes.ethAddress,
-        // });
-
-        if (amountToSell > 0) {
-            const callData = await axios({
-                method: "get",
-                url: `https://api.1inch.exchange/v3.0/${chainUrlNumber}/approve/calldata?tokenAddress=${selectedTokens.to.info.address}&amount=${amountToSell}`,
-                headerse: {
-                    "Content-Type": "application/json",
-                },
-                xsrfCookieName: "XSRF-TOKEN",
-                xsrfHeaderName: "X-XSRF-TOKEN",
-            });
-
-            console.log(callData.data);
-
-            const spenderData = await axios({
-                method: "get",
-                url: `https://api.1inch.exchange/v3.0/${chainUrlNumber}/approve/spender`,
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                xsrfCookieName: "XSRF-TOKEN",
-                xsrfHeaderName: "X-XSRF-TOKEN",
-            });
-            console.log(spenderData.data);
-
-            if (callData.data && spenderData.data) {
-                web3.eth.sign(
-                    callData.data.data,
-                    spenderData.data.address,
-                    (response) => {
-                        console.log(response);
-                    }
-                );
-            }
-        }
+        await dex.approve({
+            chain: currentChain,
+            tokenAddress: selectedTokens.from.info.address,
+            fromAddress: user.attributes.ethAddress,
+        });
     };
 
     const swapTransaction = () => {
@@ -389,7 +365,7 @@ const SwapBox = () => {
             if (amountToSell > 0) {
                 axios({
                     method: "get",
-                    url: `https://api.1inch.exchange/v3.0/${chainUrlNumber}/swap?fromTokenAddress=${selectedTokens.from.info.address}&toTokenAddress=${selectedTokens.to.info.address}&amount=${amountToSell}&fromAddres=${process.env.REACT_APP_MY_WALLET_ADDRESS}&fee=1`,
+                    url: `https://api.1inch.exchange/v3.0/${chainUrlNumber}/swap?fromTokenAddress=${selectedTokens.from.info.address}&toTokenAddress=${selectedTokens.to.info.address}&amount=${amountToSell}&fromAddress=${user.attributes.ethAddress}&slippage=0.5&referrerAddress=${process.env.REACT_APP_MY_WALLET_ADDRESS}&fee=1`,
                     headers: {
                         "Content-Type": "application/json",
                     },
