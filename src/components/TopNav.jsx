@@ -13,7 +13,6 @@ import Collapse from "@material-ui/core/Collapse";
 import Typography from "@material-ui/core/Typography";
 import Menu from "@material-ui/core/Menu";
 import MenuItem from "@material-ui/core/MenuItem";
-import TextField from "@material-ui/core/TextField";
 import Select from "@material-ui/core/Select";
 
 import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
@@ -21,8 +20,6 @@ import CloseIcon from "@material-ui/icons/Close";
 
 import { availableChainOptions } from "../helpers/availableOptions";
 import Logo from "../assets/images/logo.svg";
-
-import { convertChainToSymbol, convertChainToUrl } from "../helpers/functions";
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -73,7 +70,6 @@ const TopNav = () => {
         currentChain,
         setCurrentChain,
         availableChain,
-        setAvailableChain,
         showNetworkMessage,
         setShowNetworkMessage,
     } = useContext(ChainContext);
@@ -84,9 +80,7 @@ const TopNav = () => {
     const [anchorEl, setAnchorEl] = useState(null);
     const [shortAddress, setShortAddress] = useState("");
     const {
-        web3,
         enableWeb3,
-        isWeb3Enabled,
         web3EnableError,
         authenticate,
         isAuthenticated,
@@ -99,7 +93,7 @@ const TopNav = () => {
 
     useEffect(() => {
         enableWeb3();
-    }, []);
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     useEffect(() => {
         if (isAuthenticated) {
@@ -110,7 +104,7 @@ const TopNav = () => {
                     address.substr(address.length - 4, address.length)
             );
         }
-    }, [isAuthenticated]);
+    }, [isAuthenticated]); // eslint-disable-line react-hooks/exhaustive-deps
 
     useEffect(() => {
         if (authError) {

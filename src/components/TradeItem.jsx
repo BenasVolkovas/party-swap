@@ -1,5 +1,3 @@
-import { useState, useEffect } from "react";
-import { useMoralis } from "react-moralis";
 import { makeStyles } from "@material-ui/core/styles";
 
 import Link from "@material-ui/core/Link";

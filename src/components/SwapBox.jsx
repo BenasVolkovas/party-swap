@@ -1,22 +1,15 @@
 import { useState, useEffect, useContext } from "react";
-import {
-    useMoralis,
-    useMoralisWeb3Api,
-    useMoralisWeb3ApiCall,
-} from "react-moralis";
+import { useMoralis, useMoralisWeb3Api } from "react-moralis";
 import { ChainContext, MessageContext } from "../helpers/Contexts";
 import { makeStyles } from "@material-ui/core/styles";
 import axios from "axios";
 
-import Backdrop from "@material-ui/core/Backdrop";
 import Paper from "@material-ui/core/Paper";
 import Container from "@material-ui/core/Container";
 import Typography from "@material-ui/core/Typography";
 import Divider from "@material-ui/core/Divider";
 import Button from "@material-ui/core/Button";
 import IconButton from "@material-ui/core/IconButton";
-import Box from "@material-ui/core/Box";
-import Input from "@material-ui/core/Input";
 import SwapVertIcon from "@material-ui/icons/SwapVert";
 
 import TradeItem from "./TradeItem";
@@ -113,12 +106,12 @@ const SwapBox = () => {
         Moralis.onChainChanged(async (chainId) => {
             setCurrentChain(chainId);
         });
-    }, []);
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     useEffect(() => {
         getQuote();
         checkBalance();
-    }, [selectedTokens.from, selectedTokens.to.info]);
+    }, [selectedTokens.from, selectedTokens.to.info]); // eslint-disable-line react-hooks/exhaustive-deps
 
     useEffect(() => {
         if (
@@ -133,7 +126,7 @@ const SwapBox = () => {
                 },
             }));
         }
-    }, [selectedTokens.to.amount]);
+    }, [selectedTokens.to.amount]); // eslint-disable-line react-hooks/exhaustive-deps
 
     useEffect(() => {
         if (isWeb3Enabled) {
@@ -144,11 +137,11 @@ const SwapBox = () => {
                 setCurrentChain("eth");
             }
         }
-    }, [isWeb3Enabled, isAuthenticated]);
+    }, [isWeb3Enabled, isAuthenticated]); // eslint-disable-line react-hooks/exhaustive-deps
 
     useEffect(() => {
         getSupportedTokens();
-    }, [chainUrlNumber]);
+    }, [chainUrlNumber]); // eslint-disable-line react-hooks/exhaustive-deps
 
     useEffect(() => {
         if (isAuthenticated && isWeb3Enabled) {
@@ -184,11 +177,11 @@ const SwapBox = () => {
                 to: { info: {}, amount: "" },
             });
         }
-    }, [currentChain]);
+    }, [currentChain]); // eslint-disable-line react-hooks/exhaustive-deps
 
     useEffect(() => {
         fetchBalance();
-    }, [tokens]);
+    }, [tokens]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const initializePlugin = async () => {
         await Moralis.initPlugins();

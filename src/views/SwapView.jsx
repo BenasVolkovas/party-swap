@@ -2,12 +2,10 @@ import { useState, useEffect } from "react";
 import { makeStyles } from "@material-ui/core/styles";
 import axios from "axios";
 
-import Typography from "@material-ui/core/Typography";
-
 import TopNav from "../components/TopNav";
 import SwapBox from "../components/SwapBox";
 import Alert from "@material-ui/lab/Alert";
-import AlertTitle from "@material-ui/lab/AlertTitle";
+
 const useStyles = makeStyles((theme) => ({
     alert: {
         margin: theme.spacing(1, 1, 0, 1),
