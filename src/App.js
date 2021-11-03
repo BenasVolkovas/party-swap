@@ -1,5 +1,6 @@
 import { useChainNetwork } from "./hooks/useChainNetwork";
-import { ChainContext } from "./helpers/Contexts";
+import { useCustomMessage } from "./hooks/useCustomMessage";
+import { ChainContext, MessageContext } from "./helpers/Contexts";
 import CssBaseline from "@material-ui/core/CssBaseline";
 import { ThemeProvider, createTheme } from "@material-ui/core/styles";
 import SwapView from "./views/SwapView";
@@ -83,17 +84,18 @@ const theme = createTheme({
 
 function App() {
     const chain = useChainNetwork();
+    const message = useCustomMessage();
     return (
         <ThemeProvider theme={theme}>
             <CssBaseline />
 
             <ChainContext.Provider value={chain}>
-                <SwapView />
+                <MessageContext.Provider value={message}>
+                    <SwapView />
+                </MessageContext.Provider>
             </ChainContext.Provider>
         </ThemeProvider>
     );
 }
 
 export default App;
-
-// healthcheck

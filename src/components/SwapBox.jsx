@@ -4,7 +4,7 @@ import {
     useMoralisWeb3Api,
     useMoralisWeb3ApiCall,
 } from "react-moralis";
-import { ChainContext } from "../helpers/Contexts";
+import { ChainContext, MessageContext } from "../helpers/Contexts";
 import { makeStyles } from "@material-ui/core/styles";
 import axios from "axios";
 
@@ -21,7 +21,12 @@ import SwapVertIcon from "@material-ui/icons/SwapVert";
 
 import TradeItem from "./TradeItem";
 import TokenSelect from "./TokenSelect";
-import { convertChainToSymbol, convertChainToUrl } from "../helpers/functions";
+import {
+    convertChainToSymbol,
+    convertChainToUrl,
+    fromDecimalStringToIntegerString,
+    fromIntegerStringToDecimalString,
+} from "../helpers/functions";
 
 const useStyles = makeStyles((theme) => ({
     rootBox: {
@@ -69,41 +74,11 @@ const useStyles = makeStyles((theme) => ({
     },
 }));
 
-const fromDecimalStringToIntegerString = (number, decimal) => {
-    const arr = Number(number).toFixed(decimal).toString().split(".");
-    return arr.join("");
-};
-
-const fromIntegerStringToDecimalString = (number, decimal) => {
-    const decimalNumber = (Number(number) / Math.pow(10, decimal)).toFixed(
-        decimal
-    );
-
-    let zeros = 0;
-    for (const char of decimalNumber.split("").reverse()) {
-        if (char === "0") {
-            zeros += 1;
-        } else if (char === ".") {
-            zeros += 1;
-            break;
-        } else {
-            break;
-        }
-    }
-
-    let decimalWithoutZeros = decimalNumber;
-    if (zeros > 0) {
-        decimalWithoutZeros = decimalNumber.slice(0, -zeros);
-    }
-    return decimalWithoutZeros;
-};
-
 const SwapBox = () => {
     const Web3Api = useMoralisWeb3Api();
     const {
         user,
         web3,
-        enableWeb3,
         isWeb3Enabled,
         authenticate,
         isAuthenticated,
@@ -116,12 +91,13 @@ const SwapBox = () => {
         setAvailableChain,
         setShowNetworkMessage,
     } = useContext(ChainContext);
+    const { setCustomMessage, setShowCustomMessage } =
+        useContext(MessageContext);
     const [tokens, setTokens] = useState({});
     const [balances, setBalances] = useState({});
     const [chainUrlNumber, setChainUrlNumber] = useState("1"); // 1 is ehtereum mainnet network api for 1inch
     const [dex, setDex] = useState("");
-    const [amountToSell, setAmountToSell] = useState(0);
-    const [enoughAllowance, setEnoughAllowance] = useState(true);
+    const [enoughAllowance, setEnoughAllowance] = useState(false);
     const [enoughBalance, setEnoughBalance] = useState(true);
     const [openSelect, setOpenSelect] = useState(false);
     const [openedSide, setOpenedSide] = useState("");
@@ -142,8 +118,22 @@ const SwapBox = () => {
     useEffect(() => {
         getQuote();
         checkBalance();
-        checkAllowance();
     }, [selectedTokens.from, selectedTokens.to.info]);
+
+    useEffect(() => {
+        if (
+            selectedTokens.from.amount === "" &&
+            selectedTokens.to.amount !== ""
+        ) {
+            setSelectedTokens((currentTokens) => ({
+                ...currentTokens,
+                to: {
+                    info: currentTokens.to.info,
+                    amount: "",
+                },
+            }));
+        }
+    }, [selectedTokens.to.amount]);
 
     useEffect(() => {
         if (isWeb3Enabled) {
@@ -175,7 +165,6 @@ const SwapBox = () => {
                         from: { info: {}, amount: "" },
                         to: { info: {}, amount: "" },
                     });
-                    setAmountToSell(0);
 
                     setAvailableChain(true);
                     setChainUrlNumber(convertChainToUrl(currentChain));
@@ -190,6 +179,10 @@ const SwapBox = () => {
             // else current chain will always be one from select list
             setAvailableChain(true);
             setChainUrlNumber(convertChainToUrl(currentChain));
+            setSelectedTokens({
+                from: { info: {}, amount: "" },
+                to: { info: {}, amount: "" },
+            });
         }
     }, [currentChain]);
 
@@ -217,48 +210,51 @@ const SwapBox = () => {
                 setTokens(data.tokens);
             });
         }
-
-        console.log(web3);
     };
 
     const fetchBalance = async () => {
-        const balance = await Web3Api.account.getTokenBalances({
-            chain: currentChain,
-        });
+        if (isAuthenticated) {
+            const balance = await Web3Api.account.getTokenBalances({
+                chain: currentChain,
+            });
 
-        const balancesObject = balance.reduce((previousObject, currentItem) => {
-            previousObject[currentItem.token_address] =
-                fromIntegerStringToDecimalString(
-                    currentItem.balance,
-                    currentItem.decimals
-                );
+            const balancesObject = balance.reduce(
+                (previousObject, currentItem) => {
+                    previousObject[currentItem.token_address] =
+                        fromIntegerStringToDecimalString(
+                            currentItem.balance,
+                            currentItem.decimals
+                        );
 
-            return previousObject;
-        }, {});
+                    return previousObject;
+                },
+                {}
+            );
 
-        const nativeBalance = await Web3Api.account.getNativeBalance({
-            chain: currentChain,
-        });
+            const nativeBalance = await Web3Api.account.getNativeBalance({
+                chain: currentChain,
+            });
 
-        if (nativeBalance.balance > 0) {
-            balancesObject["0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"] =
-                fromIntegerStringToDecimalString(
-                    nativeBalance.balance,
-                    tokens["0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"]
-                        .decimals
-                );
+            if (nativeBalance.balance > 0) {
+                balancesObject["0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"] =
+                    fromIntegerStringToDecimalString(
+                        nativeBalance.balance,
+                        tokens["0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"]
+                            .decimals
+                    );
+            }
+
+            setBalances(balancesObject);
         }
-
-        setBalances(balancesObject);
     };
 
-    // TODO change the gas price (test in swagger)/ test swap and get response
     const getQuote = async () => {
         if (
             chainUrlNumber &&
             selectedTokens.from.info.address &&
             selectedTokens.to.info.address
         ) {
+            const amountToSell = getAmountToSell();
             if (amountToSell > 0) {
                 axios({
                     method: "get",
@@ -295,29 +291,34 @@ const SwapBox = () => {
     };
 
     const checkAllowance = async () => {
-        if (selectedTokens.from.info.address) {
+        if (isAuthenticated) {
             if (
-                selectedTokens.from.info.address ===
-                "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+                selectedTokens.from.info.address &&
+                selectedTokens.to.info.address
             ) {
-                setEnoughAllowance(true);
-            } else {
-                if (amountToSell > 0) {
-                    const response = await dex.hasAllowance({
-                        chain: currentChain,
-                        fromTokenAddress: selectedTokens.from.info.address, // The token user wants to swap
-                        fromAddress: user.attributes.ethAddress, // User wallet address
-                        amount: amountToSell,
-                    });
-                    // TODO handle error
-                    console.log(response);
-                    if (
-                        response.success &&
-                        typeof response.result === "boolean"
-                    ) {
-                        setEnoughAllowance(response.result);
-                    } else {
-                        setEnoughAllowance(false);
+                if (
+                    selectedTokens.from.info.address ===
+                    "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+                ) {
+                    setEnoughAllowance(true);
+                } else {
+                    const amountToSell = getAmountToSell();
+                    if (amountToSell > 0) {
+                        const response = await dex.hasAllowance({
+                            chain: currentChain,
+                            fromTokenAddress: selectedTokens.from.info.address, // The token user wants to swap
+                            fromAddress: user.attributes.ethAddress, // User wallet address
+                            amount: amountToSell,
+                        });
+
+                        if (
+                            response.success &&
+                            typeof response.result === "boolean"
+                        ) {
+                            setEnoughAllowance(response.result);
+                        } else {
+                            setEnoughAllowance(false);
+                        }
                     }
                 }
             }
@@ -325,43 +326,68 @@ const SwapBox = () => {
     };
 
     const checkBalance = () => {
-        const inputAmount = parseInt(
-            fromDecimalStringToIntegerString(
-                selectedTokens.from.amount,
-                selectedTokens.from.info.decimals
-            )
-        );
-        const balanceAmount = parseInt(
-            fromDecimalStringToIntegerString(
-                selectedTokens.from.info.address
-                    ? balances[selectedTokens.from.info.address]
-                    : 0,
-                selectedTokens.from.info.decimals
-            )
-        );
+        if (isAuthenticated) {
+            const inputAmount = parseInt(
+                fromDecimalStringToIntegerString(
+                    selectedTokens.from.amount,
+                    selectedTokens.from.info.decimals
+                )
+            );
+            const balanceAmount = parseInt(
+                fromDecimalStringToIntegerString(
+                    selectedTokens.from.info.address
+                        ? balances[selectedTokens.from.info.address]
+                        : 0,
+                    selectedTokens.from.info.decimals
+                )
+            );
 
-        if (inputAmount <= balanceAmount && inputAmount !== 0) {
-            setEnoughBalance(true);
-        } else {
-            setEnoughBalance(false);
+            if (inputAmount <= balanceAmount && inputAmount !== 0) {
+                setEnoughBalance(true);
+                checkAllowance();
+            } else {
+                setEnoughBalance(false);
+            }
         }
     };
 
     const approveSwap = async () => {
-        console.log(`approve`);
-        await dex.approve({
+        const approve = await dex.approve({
             chain: currentChain,
             tokenAddress: selectedTokens.from.info.address,
             fromAddress: user.attributes.ethAddress,
         });
+
+        try {
+            const approveTransaction = await web3.eth.sendTransaction(
+                approve.result.data
+            );
+
+            if (approveTransaction) {
+                setCustomMessage({
+                    message:
+                        "Leidimas sėkmingai suteiktas. Palaukite, kol šis veiksmas bus patvirtinas tinkle.",
+                    severity: "success",
+                });
+                setShowCustomMessage(true);
+            }
+        } catch (error) {
+            setCustomMessage({
+                message:
+                    "Įvyko klaida, bandant suteikti leidimą. Pabandykite dar kartą.",
+                severity: "error",
+            });
+            setShowCustomMessage(true);
+        }
     };
 
-    const swapTransaction = () => {
+    const swapTransaction = async () => {
         if (
             chainUrlNumber &&
             selectedTokens.from.info.address &&
             selectedTokens.to.info.address
         ) {
+            const amountToSell = getAmountToSell();
             if (amountToSell > 0) {
                 axios({
                     method: "get",
@@ -371,10 +397,37 @@ const SwapBox = () => {
                     },
                     xsrfCookieName: "XSRF-TOKEN",
                     xsrfHeaderName: "X-XSRF-TOKEN",
-                }).then((response) => {
+                }).then(async (response) => {
                     const data = response.data;
 
-                    console.log("Swap data: ", data);
+                    if (data) {
+                        try {
+                            const transaction = await web3.eth.sendTransaction(
+                                data.tx
+                            );
+
+                            if (transaction) {
+                                setCustomMessage({
+                                    message:
+                                        "Valiutos sėkmingai iškeistos. Palaukite, kol šis veiksmas bus patvirtinas tinkle.",
+                                    severity: "success",
+                                });
+                                setShowCustomMessage(true);
+
+                                setSelectedTokens({
+                                    from: { info: {}, amount: "" },
+                                    to: { info: {}, amount: "" },
+                                });
+                            }
+                        } catch (error) {
+                            setCustomMessage({
+                                message:
+                                    "Įvyko klaida, bandant keisti valiutas. Pabandykite dar kartą.",
+                                severity: "error",
+                            });
+                            setShowCustomMessage(true);
+                        }
+                    }
                 });
             }
         }
@@ -403,8 +456,8 @@ const SwapBox = () => {
         }));
     };
 
-    const updateSelectedTokenAmount = (side, amount) => {
-        const tokenDecimals = selectedTokens[side].info.decimals;
+    const updateSelectedTokenAmount = (amount) => {
+        const tokenDecimals = selectedTokens.from.info.decimals;
         const dotPlace = amount.indexOf(".");
         const decimalsFound = amount.length - (dotPlace + 1);
 
@@ -417,16 +470,8 @@ const SwapBox = () => {
 
         setSelectedTokens((currentTokens) => ({
             ...currentTokens,
-            [side]: { ...currentTokens[side], amount: amount },
+            from: { ...currentTokens.from, amount: amount },
         }));
-
-        if (side === "from") {
-            const nonDecimalAmount = fromDecimalStringToIntegerString(
-                amount,
-                selectedTokens.from.info.decimals
-            );
-            setAmountToSell(parseInt(nonDecimalAmount));
-        }
     };
 
     const switchTokensSides = () => {
@@ -434,6 +479,14 @@ const SwapBox = () => {
             from: currentTokens.to,
             to: currentTokens.from,
         }));
+    };
+
+    const getAmountToSell = () => {
+        const integerAmount = fromDecimalStringToIntegerString(
+            selectedTokens.from.amount,
+            selectedTokens.from.info.decimals
+        );
+        return parseInt(integerAmount);
     };
 
     return (
@@ -471,8 +524,8 @@ const SwapBox = () => {
                             handleTokenSelectOpen={(side) =>
                                 handleTokenSelectOpen(side)
                             }
-                            updateSelectedTokenAmount={(side, amount) =>
-                                updateSelectedTokenAmount(side, amount)
+                            updateSelectedTokenAmount={(amount) =>
+                                updateSelectedTokenAmount(amount)
                             }
                         />
                         <div className={classes.switchButtonContainer}>
@@ -494,9 +547,6 @@ const SwapBox = () => {
                             handleTokenSelectOpen={(side) =>
                                 handleTokenSelectOpen(side)
                             }
-                            updateSelectedTokenAmount={(side, amount) =>
-                                updateSelectedTokenAmount(side, amount)
-                            }
                         />
 
                         {!isAuthenticated ? (
@@ -517,6 +567,15 @@ const SwapBox = () => {
                             >
                                 Nepakankamas valiutos balansas
                             </Button>
+                        ) : !selectedTokens.to.info.address ? (
+                            <Button
+                                disabled
+                                variant="contained"
+                                color="primary"
+                                className={classes.button}
+                            >
+                                Pasirinkite valiutą
+                            </Button>
                         ) : !enoughAllowance ? (
                             <Button
                                 variant="contained"
@@ -524,7 +583,7 @@ const SwapBox = () => {
                                 className={classes.button}
                                 onClick={() => approveSwap()}
                             >
-                                Įgalinti puslapį
+                                Duoti teisę keisti
                             </Button>
                         ) : (
                             <Button

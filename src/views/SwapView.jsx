@@ -8,7 +8,6 @@ import TopNav from "../components/TopNav";
 import SwapBox from "../components/SwapBox";
 import Alert from "@material-ui/lab/Alert";
 import AlertTitle from "@material-ui/lab/AlertTitle";
-import CustomComponent from "../components/CustomComponent";
 const useStyles = makeStyles((theme) => ({
     alert: {
         margin: theme.spacing(1, 1, 0, 1),
@@ -48,7 +47,6 @@ const SwapView = () => {
                     Kriptovaliutų keitykla laikinai neveikia.
                 </Alert>
             )}
-            {/* <CustomComponent /> */}
         </>
     );
 };

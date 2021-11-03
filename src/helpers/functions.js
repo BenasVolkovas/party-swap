@@ -47,3 +47,32 @@ export const convertChainToUrl = (chain) => {
 
     return urlParam;
 };
+
+export const fromDecimalStringToIntegerString = (number, decimal) => {
+    const arr = Number(number).toFixed(decimal).toString().split(".");
+    return arr.join("");
+};
+
+export const fromIntegerStringToDecimalString = (number, decimal) => {
+    const decimalNumber = (Number(number) / Math.pow(10, decimal)).toFixed(
+        decimal
+    );
+
+    let zeros = 0;
+    for (const char of decimalNumber.split("").reverse()) {
+        if (char === "0") {
+            zeros += 1;
+        } else if (char === ".") {
+            zeros += 1;
+            break;
+        } else {
+            break;
+        }
+    }
+
+    let decimalWithoutZeros = decimalNumber;
+    if (zeros > 0) {
+        decimalWithoutZeros = decimalNumber.slice(0, -zeros);
+    }
+    return decimalWithoutZeros;
+};

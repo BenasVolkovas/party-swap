@@ -109,7 +109,6 @@ const TradeItem = ({
                                 className={classes.maxBalanceButton}
                                 onClick={() =>
                                     updateSelectedTokenAmount(
-                                        side,
                                         balance.toString()
                                     )
                                 }
@@ -128,9 +127,7 @@ const TradeItem = ({
                     type="number"
                     placeholder="0.0"
                     value={activeToken.amount}
-                    onChange={(e) =>
-                        updateSelectedTokenAmount(side, e.target.value)
-                    }
+                    onChange={(e) => updateSelectedTokenAmount(e.target.value)}
                     className={classes.amountInput}
                 />
                 {Object.entries(activeToken.info).length !== 0 ? (

@@ -1,6 +1,6 @@
 import { useState, useEffect, useContext } from "react";
 import { useMoralis } from "react-moralis";
-import { ChainContext } from "../helpers/Contexts";
+import { ChainContext, MessageContext } from "../helpers/Contexts";
 import { makeStyles } from "@material-ui/core/styles";
 
 import Toolbar from "@material-ui/core/Toolbar";
@@ -77,6 +77,8 @@ const TopNav = () => {
         showNetworkMessage,
         setShowNetworkMessage,
     } = useContext(ChainContext);
+    const { customMessage, showCustomMessage, setShowCustomMessage } =
+        useContext(MessageContext);
     const [openAuthError, setOpenAuthError] = useState(false);
     const [openWeb3Error, setOpenWeb3Error] = useState(false);
     const [anchorEl, setAnchorEl] = useState(null);
@@ -234,6 +236,29 @@ const TopNav = () => {
                     )}
                 </Toolbar>
             </AppBar>
+
+            {showCustomMessage && (
+                <Collapse in={showCustomMessage}>
+                    <Alert
+                        severity={customMessage.severity}
+                        className={classes.alert}
+                        action={
+                            <IconButton
+                                aria-label="close"
+                                color="inherit"
+                                size="small"
+                                onClick={() => {
+                                    setShowCustomMessage(false);
+                                }}
+                            >
+                                <CloseIcon fontSize="inherit" />
+                            </IconButton>
+                        }
+                    >
+                        <AlertTitle>{customMessage.message}</AlertTitle>
+                    </Alert>
+                </Collapse>
+            )}
 
             {showNetworkMessage && (
                 <Collapse in={showNetworkMessage}>
