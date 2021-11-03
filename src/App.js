@@ -1,3 +1,6 @@
+import { useChainNetwork } from "./hooks/useChainNetwork";
+import { useCustomMessage } from "./hooks/useCustomMessage";
+import { ChainContext, MessageContext } from "./helpers/Contexts";
 import CssBaseline from "@material-ui/core/CssBaseline";
 import { ThemeProvider, createTheme } from "@material-ui/core/styles";
 import SwapView from "./views/SwapView";
@@ -7,7 +10,6 @@ const theme = createTheme({
         fontSize: 14,
         htmlFontSize: 10,
         fontFamily: ["Nunito", "sans-serif"].join(","),
-        color: "#323232",
         h1: {
             fontSize: "4rem",
             fontWeight: 400,
@@ -49,7 +51,14 @@ const theme = createTheme({
             light: "#fa98c2",
             main: "#f765a3",
             dark: "#dc5a91",
+            contrastText: "#ffffff",
         },
+        background: {
+            default: "#fafafa",
+        },
+    },
+    shape: {
+        borderRadius: 20,
     },
     spacing: (factor) => `${1 * factor}rem`,
 
@@ -63,7 +72,7 @@ const theme = createTheme({
         color: "#dcdcdc",
     },
     lightGrayColor: {
-        color: "#f5f5f5",
+        color: "#fafafa",
     },
     themeColor: {
         color: "#f765a3",
@@ -74,14 +83,19 @@ const theme = createTheme({
 });
 
 function App() {
+    const chain = useChainNetwork();
+    const message = useCustomMessage();
     return (
         <ThemeProvider theme={theme}>
             <CssBaseline />
-            <SwapView />
+
+            <ChainContext.Provider value={chain}>
+                <MessageContext.Provider value={message}>
+                    <SwapView />
+                </MessageContext.Provider>
+            </ChainContext.Provider>
         </ThemeProvider>
     );
 }
 
 export default App;
-
-// healthcheck
