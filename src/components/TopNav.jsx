@@ -1,8 +1,7 @@
 import { useState, useEffect, useContext } from "react";
-import { useMoralis } from "react-moralis";
+import { useMoralis, ByMoralis } from "react-moralis";
 import { ChainContext, MessageContext } from "../helpers/Contexts";
 import { makeStyles } from "@material-ui/core/styles";
-
 import Toolbar from "@material-ui/core/Toolbar";
 import AppBar from "@material-ui/core/AppBar";
 import Button from "@material-ui/core/Button";
@@ -91,9 +90,7 @@ const TopNav = () => {
     } = useMoralis();
     const classes = useStyles();
 
-    useEffect(() => {
-        enableWeb3();
-    }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    useEffect(() => {}, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     useEffect(() => {
         if (isAuthenticated) {
@@ -117,6 +114,11 @@ const TopNav = () => {
             setOpenWeb3Error(true);
         }
     }, [web3EnableError]);
+
+    const loginUser = async () => {
+        enableWeb3();
+        authenticate();
+    };
 
     const updateChain = (e) => {
         setCurrentChain(e.target.value);
@@ -223,7 +225,7 @@ const TopNav = () => {
                             color="primary"
                             disabled={isAuthenticating}
                             className={classes.actionButton}
-                            onClick={() => authenticate()}
+                            onClick={() => loginUser()}
                         >
                             Prisijungti su pinigine
                         </Button>
@@ -323,7 +325,11 @@ const TopNav = () => {
                         }
                     >
                         <AlertTitle>Klaida bandant įgalinti WEB3</AlertTitle>
-                        {web3EnableError.message}
+                        <div>{web3EnableError.message}</div>
+                        <div>
+                            Norint naudotis keityklos paslaugomis atsisiųskite{" "}
+                            <a href="https://metamask.io/">MetaMask</a> piniginę
+                        </div>
                     </Alert>
                 </Collapse>
             )}
