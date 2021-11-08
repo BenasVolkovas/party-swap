@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
 import { makeStyles } from "@material-ui/core/styles";
 import axios from "axios";
-import { ByMoralis } from "react-moralis";
-import inchLogo from "../assets/images/1inch.svg";
+
 import TopNav from "../components/TopNav";
 import SwapBox from "../components/SwapBox";
 import Alert from "@material-ui/lab/Alert";
@@ -10,13 +9,6 @@ import Alert from "@material-ui/lab/Alert";
 const useStyles = makeStyles((theme) => ({
     alert: {
         margin: theme.spacing(1, 1, 0, 1),
-    },
-    bottomLogos: {
-        height: theme.spacing(5),
-        margin: theme.spacing(0, 2, 2, 2),
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "flex-start",
     },
 }));
 
@@ -53,10 +45,6 @@ const SwapView = () => {
                     Kriptovaliutų keitykla laikinai neveikia.
                 </Alert>
             )}
-            <div className={classes.bottomLogos}>
-                <ByMoralis variant="dark" width={150} />
-                <img src={inchLogo} height="100%" />
-            </div>
         </>
     );
 };
