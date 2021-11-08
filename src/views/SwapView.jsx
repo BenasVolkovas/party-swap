@@ -45,6 +45,10 @@ const SwapView = () => {
                     Kriptovaliutų keitykla laikinai neveikia.
                 </Alert>
             )}
+            <div className={classes.bottomLogos}>
+                <ByMoralis variant="dark" width={150} />
+                <img src={inchLogo} alt="Moralis logo" height="100%" />
+            </div>
         </>
     );
 };
