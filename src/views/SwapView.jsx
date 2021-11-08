@@ -55,7 +55,7 @@ const SwapView = () => {
             )}
             <div className={classes.bottomLogos}>
                 <ByMoralis variant="dark" width={150} />
-                <img src={inchLogo} height="100%" />
+                <img src={inchLogo} alt="Moralis logo" height="100%" />
             </div>
         </>
     );

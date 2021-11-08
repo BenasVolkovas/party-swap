@@ -1,5 +1,5 @@
 import { useState, useEffect, useContext } from "react";
-import { useMoralis, ByMoralis } from "react-moralis";
+import { useMoralis } from "react-moralis";
 import { ChainContext, MessageContext } from "../helpers/Contexts";
 import { makeStyles } from "@material-ui/core/styles";
 import Toolbar from "@material-ui/core/Toolbar";
