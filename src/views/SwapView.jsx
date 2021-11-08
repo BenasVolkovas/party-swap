@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { makeStyles } from "@material-ui/core/styles";
 import axios from "axios";
-
+import { ByMoralis } from "react-moralis";
 import TopNav from "../components/TopNav";
 import SwapBox from "../components/SwapBox";
 import Alert from "@material-ui/lab/Alert";
+import inchLogo from "../assets/images/1inch.svg";
 
 const useStyles = makeStyles((theme) => ({
     alert: {
