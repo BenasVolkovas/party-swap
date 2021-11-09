@@ -11,6 +11,13 @@ const useStyles = makeStyles((theme) => ({
     alert: {
         margin: theme.spacing(1, 1, 0, 1),
     },
+    bottomLogos: {
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "flex-start",
+        margin: theme.spacing(2),
+        height: theme.spacing(5),
+    },
 }));
 
 const SwapView = () => {
