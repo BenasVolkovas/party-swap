@@ -63,6 +63,9 @@ const useStyles = makeStyles((theme) => ({
         alignItems: "center",
         justifyContent: "center",
     },
+    link: {
+        color: theme.themeColor.color,
+    },
 }));
 
 const TopNav = () => {
@@ -81,6 +84,7 @@ const TopNav = () => {
     const [shortAddress, setShortAddress] = useState("");
     const {
         enableWeb3,
+        isWeb3Enabled,
         web3EnableError,
         authenticate,
         isAuthenticated,
@@ -90,10 +94,6 @@ const TopNav = () => {
         user,
     } = useMoralis();
     const classes = useStyles();
-
-    useEffect(() => {
-        enableWeb3();
-    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     useEffect(() => {
         if (isAuthenticated) {
@@ -117,6 +117,11 @@ const TopNav = () => {
             setOpenWeb3Error(true);
         }
     }, [web3EnableError]);
+
+    const loginUser = () => {
+        if (!isWeb3Enabled) enableWeb3();
+        authenticate();
+    };
 
     const updateChain = (e) => {
         setCurrentChain(e.target.value);
@@ -223,7 +228,7 @@ const TopNav = () => {
                             color="primary"
                             disabled={isAuthenticating}
                             className={classes.actionButton}
-                            onClick={() => authenticate()}
+                            onClick={() => loginUser()}
                         >
                             Prisijungti su pinigine
                         </Button>
@@ -323,7 +328,17 @@ const TopNav = () => {
                         }
                     >
                         <AlertTitle>Klaida bandant įgalinti WEB3</AlertTitle>
-                        {web3EnableError.message}
+                        <div>{web3EnableError.message}</div>
+                        <div>
+                            Norėdami naudotis keityklos paslaugomis atsisiųskite{" "}
+                            <a
+                                href="https://metamask.io/"
+                                alt="https://metamask.io/"
+                                className={classes.link}
+                            >
+                                MetaMask
+                            </a>
+                        </div>
                     </Alert>
                 </Collapse>
             )}

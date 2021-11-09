@@ -23,7 +23,7 @@ import {
 
 const useStyles = makeStyles((theme) => ({
     rootBox: {
-        marginTop: theme.spacing(6),
+        margin: theme.spacing(6, 0),
         position: "relative",
     },
     wrongNetworkError: {
