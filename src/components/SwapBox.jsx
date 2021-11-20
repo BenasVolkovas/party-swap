@@ -93,6 +93,7 @@ const SwapBox = () => {
     const [enoughAllowance, setEnoughAllowance] = useState(false);
     const [enoughBalance, setEnoughBalance] = useState(true);
     const [openSelect, setOpenSelect] = useState(false);
+    const [enoughLiquidity, setEnoughLiquidity] = useState(true);
     const [openedSide, setOpenedSide] = useState("");
     const [selectedTokens, setSelectedTokens] = useState({
         from: { info: {}, amount: "" },
@@ -257,20 +258,38 @@ const SwapBox = () => {
                     },
                     xsrfCookieName: "XSRF-TOKEN",
                     xsrfHeaderName: "X-XSRF-TOKEN",
-                }).then((response) => {
-                    const data = response.data;
+                })
+                    .then((response) => {
+                        const data = response.data;
 
-                    setSelectedTokens((currentTokens) => ({
-                        ...currentTokens,
-                        to: {
-                            info: currentTokens.to.info,
-                            amount: fromIntegerStringToDecimalString(
-                                data.toTokenAmount,
-                                data.toToken.decimals
-                            ),
-                        },
-                    }));
-                });
+                        setSelectedTokens((currentTokens) => ({
+                            ...currentTokens,
+                            to: {
+                                info: currentTokens.to.info,
+                                amount: fromIntegerStringToDecimalString(
+                                    data.toTokenAmount,
+                                    data.toToken.decimals
+                                ),
+                            },
+                        }));
+                        setEnoughLiquidity(true);
+                    })
+                    .catch((error) => {
+                        if (
+                            error.response.data.statusCode === 400 &&
+                            error.response.data.description ===
+                                "insufficient liquidity"
+                        ) {
+                            setEnoughLiquidity(false);
+                            setSelectedTokens((currentTokens) => ({
+                                ...currentTokens,
+                                to: {
+                                    info: currentTokens.to.info,
+                                    amount: "",
+                                },
+                            }));
+                        }
+                    });
             } else {
                 setSelectedTokens((currentTokens) => ({
                     ...currentTokens,
@@ -568,6 +587,15 @@ const SwapBox = () => {
                                 className={classes.button}
                             >
                                 Pasirinkite valiutą
+                            </Button>
+                        ) : !enoughLiquidity ? (
+                            <Button
+                                disabled
+                                variant="contained"
+                                color="primary"
+                                className={classes.button}
+                            >
+                                Nepakankamas likvidumas
                             </Button>
                         ) : !enoughAllowance ? (
                             <Button
