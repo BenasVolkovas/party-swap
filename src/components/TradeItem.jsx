@@ -91,6 +91,29 @@ const TradeItem = ({
 }) => {
     const classes = useStyles();
 
+    const activeTokens = {
+        from: {
+            info: {
+                name: "Tether",
+                symbol: "USDT",
+                logoURI:
+                    "https://assets.coingecko.com/coins/images/325/small/Tether.png?1668148663",
+            },
+            amount: 100,
+        },
+        to: {
+            info: {
+                name: "USD Coin",
+                symbol: "USDC",
+                logoURI:
+                    "https://assets.coingecko.com/coins/images/6319/small/usdc.png?1695374272",
+            },
+            amount: 99.98,
+        },
+    };
+
+    activeToken = activeTokens[side];
+
     return (
         <Paper elevation={0} variant="outlined" className={classes.root}>
             <div className={classes.topDetails}>

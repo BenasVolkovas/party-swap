@@ -1,5 +1,5 @@
 import { useState, useEffect, useContext } from "react";
-import { useMoralis } from "react-moralis";
+// import { useMoralis } from "react-moralis";
 import { ChainContext, MessageContext } from "../helpers/Contexts";
 import { makeStyles } from "@material-ui/core/styles";
 
@@ -69,6 +69,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const TopNav = () => {
+    const isAuthenticated = false;
     const {
         currentChain,
         setCurrentChain,
@@ -82,45 +83,45 @@ const TopNav = () => {
     const [openWeb3Error, setOpenWeb3Error] = useState(false);
     const [anchorEl, setAnchorEl] = useState(null);
     const [shortAddress, setShortAddress] = useState("");
-    const {
-        enableWeb3,
-        isWeb3Enabled,
-        web3EnableError,
-        authenticate,
-        isAuthenticated,
-        isAuthenticating,
-        authError,
-        logout,
-        user,
-    } = useMoralis();
+    // const {
+    //     enableWeb3,
+    //     isWeb3Enabled,
+    //     web3EnableError,
+    //     authenticate,
+    //     isAuthenticated,
+    //     isAuthenticating,
+    //     authError,
+    //     logout,
+    //     user,
+    // } = useMoralis();
     const classes = useStyles();
 
-    useEffect(() => {
-        if (isAuthenticated) {
-            const address = user.attributes.ethAddress;
-            setShortAddress(
-                address.substr(0, 6) +
-                    "…" +
-                    address.substr(address.length - 4, address.length)
-            );
-        }
-    }, [isAuthenticated]); // eslint-disable-line react-hooks/exhaustive-deps
+    // useEffect(() => {
+    //     if (isAuthenticated) {
+    //         const address = user.attributes.ethAddress;
+    //         setShortAddress(
+    //             address.substr(0, 6) +
+    //                 "…" +
+    //                 address.substr(address.length - 4, address.length)
+    //         );
+    //     }
+    // }, [isAuthenticated]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    useEffect(() => {
-        if (authError) {
-            setOpenAuthError(true);
-        }
-    }, [authError]);
+    // useEffect(() => {
+    //     if (authError) {
+    //         setOpenAuthError(true);
+    //     }
+    // }, [authError]);
 
-    useEffect(() => {
-        if (web3EnableError) {
-            setOpenWeb3Error(true);
-        }
-    }, [web3EnableError]);
+    // useEffect(() => {
+    //     if (web3EnableError) {
+    //         setOpenWeb3Error(true);
+    //     }
+    // }, [web3EnableError]);
 
     const loginUser = () => {
-        if (!isWeb3Enabled) enableWeb3();
-        authenticate();
+        // if (!isWeb3Enabled) enableWeb3();
+        // authenticate();
     };
 
     const updateChain = (e) => {
@@ -137,7 +138,7 @@ const TopNav = () => {
 
     const disconnectWallet = () => {
         closeMenu();
-        logout();
+        // logout();
     };
 
     return (
@@ -226,7 +227,7 @@ const TopNav = () => {
                         <Button
                             variant="contained"
                             color="primary"
-                            disabled={isAuthenticating}
+                            disabled={false}
                             className={classes.actionButton}
                             onClick={() => loginUser()}
                         >
@@ -285,7 +286,7 @@ const TopNav = () => {
             )}
 
             {/* Authentication errors occur when user does not provide sinature to the request  */}
-            {authError && (
+            {false && (
                 <Collapse in={openAuthError}>
                     <Alert
                         severity="error"
@@ -304,12 +305,12 @@ const TopNav = () => {
                         }
                     >
                         <AlertTitle>Prisijungimo klaida</AlertTitle>
-                        {authError.message}
+                        {/* {authError.message} */}
                     </Alert>
                 </Collapse>
             )}
 
-            {web3EnableError && (
+            {false && (
                 <Collapse in={openWeb3Error}>
                     <Alert
                         severity="error"
@@ -328,7 +329,7 @@ const TopNav = () => {
                         }
                     >
                         <AlertTitle>Klaida bandant įgalinti WEB3</AlertTitle>
-                        <div>{web3EnableError.message}</div>
+                        {/* <div>{web3EnableError.message}</div> */}
                         <div>
                             Norėdami naudotis keityklos paslaugomis atsisiųskite{" "}
                             <a

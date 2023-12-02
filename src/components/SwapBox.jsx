@@ -1,5 +1,5 @@
 import { useState, useEffect, useContext } from "react";
-import { useMoralis, useMoralisWeb3Api } from "react-moralis";
+// import { useMoralis, useMoralisWeb3Api } from "react-moralis";
 import { ChainContext, MessageContext } from "../helpers/Contexts";
 import { makeStyles } from "@material-ui/core/styles";
 import axios from "axios";
@@ -68,15 +68,15 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const SwapBox = () => {
-    const Web3Api = useMoralisWeb3Api();
-    const {
-        user,
-        web3,
-        isWeb3Enabled,
-        authenticate,
-        isAuthenticated,
-        Moralis,
-    } = useMoralis();
+    // const Web3Api = useMoralisWeb3Api();
+    // const {
+    //     user,
+    //     web3,
+    //     isWeb3Enabled,
+    //     authenticate,
+    //     isAuthenticated,
+    //     Moralis,
+    // } = useMoralis();
     const {
         currentChain,
         setCurrentChain,
@@ -103,10 +103,11 @@ const SwapBox = () => {
 
     useEffect(() => {
         initializePlugin();
+        setCurrentChain("eth");
 
-        Moralis.onChainChanged(async (chainId) => {
-            setCurrentChain(chainId);
-        });
+        // Moralis.onChainChanged(async (chainId) => {
+        //     setCurrentChain(chainId);
+        // });
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     useEffect(() => {
@@ -129,55 +130,55 @@ const SwapBox = () => {
         }
     }, [selectedTokens.to.amount]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    useEffect(() => {
-        if (isWeb3Enabled) {
-            if (isAuthenticated) {
-                const chainId = web3.currentProvider.chainId;
-                setCurrentChain(chainId);
-            } else {
-                setCurrentChain("eth");
-            }
-        }
-    }, [isWeb3Enabled, isAuthenticated]); // eslint-disable-line react-hooks/exhaustive-deps
+    // useEffect(() => {
+    //     if (isWeb3Enabled) {
+    //         if (isAuthenticated) {
+    //             const chainId = web3.currentProvider.chainId;
+    //             setCurrentChain(chainId);
+    //         } else {
+    //             setCurrentChain("eth");
+    //         }
+    //     }
+    // }, [isWeb3Enabled, isAuthenticated]); // eslint-disable-line react-hooks/exhaustive-deps
 
     useEffect(() => {
         getSupportedTokens();
     }, [chainUrlNumber]); // eslint-disable-line react-hooks/exhaustive-deps
 
     useEffect(() => {
-        if (isAuthenticated && isWeb3Enabled) {
-            const curentChainStatus = convertChainToSymbol(currentChain);
-            if (curentChainStatus.change) {
-                setCurrentChain(curentChainStatus.symbol);
-            } else if (curentChainStatus.available) {
-                const metamaskChain = convertChainToSymbol(
-                    web3.currentProvider.chainId
-                );
+        // if (isAuthenticated && isWeb3Enabled) {
+        //     const curentChainStatus = convertChainToSymbol(currentChain);
+        //     if (curentChainStatus.change) {
+        //         setCurrentChain(curentChainStatus.symbol);
+        //     } else if (curentChainStatus.available) {
+        //         const metamaskChain = convertChainToSymbol(
+        //             web3.currentProvider.chainId
+        //         );
 
-                if (currentChain === metamaskChain.symbol) {
-                    setSelectedTokens({
-                        from: { info: {}, amount: "" },
-                        to: { info: {}, amount: "" },
-                    });
+        //         if (currentChain === metamaskChain.symbol) {
+        //             setSelectedTokens({
+        //                 from: { info: {}, amount: "" },
+        //                 to: { info: {}, amount: "" },
+        //             });
 
-                    setAvailableChain(true);
-                    setChainUrlNumber(convertChainToUrl(currentChain));
-                    setShowNetworkMessage(false);
-                } else {
-                    setShowNetworkMessage(true);
-                }
-            } else {
-                setAvailableChain(false);
-            }
-        } else {
-            // else current chain will always be one from select list
-            setAvailableChain(true);
-            setChainUrlNumber(convertChainToUrl(currentChain));
-            setSelectedTokens({
-                from: { info: {}, amount: "" },
-                to: { info: {}, amount: "" },
-            });
-        }
+        //             setAvailableChain(true);
+        //             setChainUrlNumber(convertChainToUrl(currentChain));
+        //             setShowNetworkMessage(false);
+        //         } else {
+        //             setShowNetworkMessage(true);
+        //         }
+        //     } else {
+        //         setAvailableChain(false);
+        //     }
+        // } else {
+        // else current chain will always be one from select list
+        setAvailableChain(true);
+        setChainUrlNumber(convertChainToUrl(currentChain));
+        setSelectedTokens({
+            from: { info: {}, amount: "" },
+            to: { info: {}, amount: "" },
+        });
+        // }
     }, [currentChain]); // eslint-disable-line react-hooks/exhaustive-deps
 
     useEffect(() => {
@@ -185,61 +186,56 @@ const SwapBox = () => {
     }, [tokens]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const initializePlugin = async () => {
-        await Moralis.initPlugins();
-        setDex(Moralis.Plugins.oneInch);
+        // await Moralis.initPlugins();
+        // setDex(Moralis.Plugins.oneInch);
     };
 
     const getSupportedTokens = async () => {
-        if (chainUrlNumber) {
-            axios({
-                method: "get",
-                url: `https://api.1inch.exchange/v3.0/${chainUrlNumber}/tokens`,
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                xsrfCookieName: "XSRF-TOKEN",
-                xsrfHeaderName: "X-XSRF-TOKEN",
-            }).then((response) => {
-                const data = response.data;
-                setTokens(data.tokens);
-            });
-        }
+        // if (chainUrlNumber) {
+        //     axios({
+        //         method: "get",
+        //         url: `https://api.1inch.exchange/v3.0/${chainUrlNumber}/tokens`,
+        //         headers: {
+        //             "Content-Type": "application/json",
+        //         },
+        //         xsrfCookieName: "XSRF-TOKEN",
+        //         xsrfHeaderName: "X-XSRF-TOKEN",
+        //     }).then((response) => {
+        //         const data = response.data;
+        //         setTokens(data.tokens);
+        //     });
+        // }
     };
 
     const fetchBalance = async () => {
-        if (isAuthenticated) {
-            const balance = await Web3Api.account.getTokenBalances({
-                chain: currentChain,
-            });
-
-            const balancesObject = balance.reduce(
-                (previousObject, currentItem) => {
-                    previousObject[currentItem.token_address] =
-                        fromIntegerStringToDecimalString(
-                            currentItem.balance,
-                            currentItem.decimals
-                        );
-
-                    return previousObject;
-                },
-                {}
-            );
-
-            const nativeBalance = await Web3Api.account.getNativeBalance({
-                chain: currentChain,
-            });
-
-            if (nativeBalance.balance > 0) {
-                balancesObject["0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"] =
-                    fromIntegerStringToDecimalString(
-                        nativeBalance.balance,
-                        tokens["0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"]
-                            .decimals
-                    );
-            }
-
-            setBalances(balancesObject);
-        }
+        // if (isAuthenticated) {
+        //     const balance = await Web3Api.account.getTokenBalances({
+        //         chain: currentChain,
+        //     });
+        //     const balancesObject = balance.reduce(
+        //         (previousObject, currentItem) => {
+        //             previousObject[currentItem.token_address] =
+        //                 fromIntegerStringToDecimalString(
+        //                     currentItem.balance,
+        //                     currentItem.decimals
+        //                 );
+        //             return previousObject;
+        //         },
+        //         {}
+        //     );
+        //     const nativeBalance = await Web3Api.account.getNativeBalance({
+        //         chain: currentChain,
+        //     });
+        //     if (nativeBalance.balance > 0) {
+        //         balancesObject["0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"] =
+        //             fromIntegerStringToDecimalString(
+        //                 nativeBalance.balance,
+        //                 tokens["0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"]
+        //                     .decimals
+        //             );
+        //     }
+        //     setBalances(balancesObject);
+        // }
     };
 
     const getQuote = async () => {
@@ -303,146 +299,139 @@ const SwapBox = () => {
     };
 
     const checkAllowance = async () => {
-        if (isAuthenticated) {
-            if (
-                selectedTokens.from.info.address &&
-                selectedTokens.to.info.address
-            ) {
-                if (
-                    selectedTokens.from.info.address ===
-                    "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
-                ) {
-                    setEnoughAllowance(true);
-                } else {
-                    const amountToSell = getAmountToSell();
-                    if (amountToSell > 0) {
-                        const response = await dex.hasAllowance({
-                            chain: currentChain,
-                            fromTokenAddress: selectedTokens.from.info.address, // The token user wants to swap
-                            fromAddress: user.attributes.ethAddress, // User wallet address
-                            amount: amountToSell,
-                        });
-
-                        if (
-                            response.success &&
-                            typeof response.result === "boolean"
-                        ) {
-                            setEnoughAllowance(response.result);
-                        } else {
-                            setEnoughAllowance(false);
-                        }
-                    }
-                }
-            }
-        }
+        // if (isAuthenticated) {
+        //     if (
+        //         selectedTokens.from.info.address &&
+        //         selectedTokens.to.info.address
+        //     ) {
+        //         if (
+        //             selectedTokens.from.info.address ===
+        //             "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+        //         ) {
+        //             setEnoughAllowance(true);
+        //         } else {
+        //             const amountToSell = getAmountToSell();
+        //             if (amountToSell > 0) {
+        //                 const response = await dex.hasAllowance({
+        //                     chain: currentChain,
+        //                     fromTokenAddress: selectedTokens.from.info.address, // The token user wants to swap
+        //                     fromAddress: user.attributes.ethAddress, // User wallet address
+        //                     amount: amountToSell,
+        //                 });
+        //                 if (
+        //                     response.success &&
+        //                     typeof response.result === "boolean"
+        //                 ) {
+        //                     setEnoughAllowance(response.result);
+        //                 } else {
+        //                     setEnoughAllowance(false);
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }
     };
 
     const checkBalance = () => {
-        if (isAuthenticated) {
-            const inputAmount = parseInt(
-                fromDecimalStringToIntegerString(
-                    selectedTokens.from.amount,
-                    selectedTokens.from.info.decimals
-                )
-            );
-            const balanceAmount = parseInt(
-                fromDecimalStringToIntegerString(
-                    selectedTokens.from.info.address
-                        ? balances[selectedTokens.from.info.address]
-                        : 0,
-                    selectedTokens.from.info.decimals
-                )
-            );
-
-            if (inputAmount <= balanceAmount && inputAmount !== 0) {
-                setEnoughBalance(true);
-                checkAllowance();
-            } else {
-                setEnoughBalance(false);
-            }
-        }
+        // if (isAuthenticated) {
+        //     const inputAmount = parseInt(
+        //         fromDecimalStringToIntegerString(
+        //             selectedTokens.from.amount,
+        //             selectedTokens.from.info.decimals
+        //         )
+        //     );
+        //     const balanceAmount = parseInt(
+        //         fromDecimalStringToIntegerString(
+        //             selectedTokens.from.info.address
+        //                 ? balances[selectedTokens.from.info.address]
+        //                 : 0,
+        //             selectedTokens.from.info.decimals
+        //         )
+        //     );
+        //     if (inputAmount <= balanceAmount && inputAmount !== 0) {
+        //         setEnoughBalance(true);
+        //         checkAllowance();
+        //     } else {
+        //         setEnoughBalance(false);
+        //     }
+        // }
     };
 
     const approveSwap = async () => {
-        const approve = await dex.approve({
-            chain: currentChain,
-            tokenAddress: selectedTokens.from.info.address,
-            fromAddress: user.attributes.ethAddress,
-        });
-
-        try {
-            const approveTransaction = await web3.eth.sendTransaction(
-                approve.result.data
-            );
-
-            if (approveTransaction) {
-                setCustomMessage({
-                    message:
-                        "Leidimas sėkmingai suteiktas. Palaukite, kol šis veiksmas bus patvirtinas tinkle.",
-                    severity: "success",
-                });
-                setShowCustomMessage(true);
-            }
-        } catch (error) {
-            setCustomMessage({
-                message:
-                    "Įvyko klaida, bandant suteikti leidimą. Pabandykite dar kartą.",
-                severity: "error",
-            });
-            setShowCustomMessage(true);
-        }
+        // const approve = await dex.approve({
+        //     chain: currentChain,
+        //     tokenAddress: selectedTokens.from.info.address,
+        //     fromAddress: user.attributes.ethAddress,
+        // });
+        // try {
+        //     const approveTransaction = await web3.eth.sendTransaction(
+        //         approve.result.data
+        //     );
+        //     if (approveTransaction) {
+        //         setCustomMessage({
+        //             message:
+        //                 "Leidimas sėkmingai suteiktas. Palaukite, kol šis veiksmas bus patvirtinas tinkle.",
+        //             severity: "success",
+        //         });
+        //         setShowCustomMessage(true);
+        //     }
+        // } catch (error) {
+        //     setCustomMessage({
+        //         message:
+        //             "Įvyko klaida, bandant suteikti leidimą. Pabandykite dar kartą.",
+        //         severity: "error",
+        //     });
+        //     setShowCustomMessage(true);
+        // }
     };
 
     const swapTransaction = async () => {
-        if (
-            chainUrlNumber &&
-            selectedTokens.from.info.address &&
-            selectedTokens.to.info.address
-        ) {
-            const amountToSell = getAmountToSell();
-            if (amountToSell > 0) {
-                axios({
-                    method: "get",
-                    url: `https://api.1inch.exchange/v3.0/${chainUrlNumber}/swap?fromTokenAddress=${selectedTokens.from.info.address}&toTokenAddress=${selectedTokens.to.info.address}&amount=${amountToSell}&fromAddress=${user.attributes.ethAddress}&slippage=0.5&referrerAddress=${process.env.REACT_APP_MY_WALLET_ADDRESS}&fee=1`,
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    xsrfCookieName: "XSRF-TOKEN",
-                    xsrfHeaderName: "X-XSRF-TOKEN",
-                }).then(async (response) => {
-                    const data = response.data;
-
-                    if (data) {
-                        try {
-                            const transaction = await web3.eth.sendTransaction(
-                                data.tx
-                            );
-
-                            if (transaction) {
-                                setCustomMessage({
-                                    message:
-                                        "Valiutos sėkmingai iškeistos. Palaukite, kol šis veiksmas bus patvirtinas tinkle.",
-                                    severity: "success",
-                                });
-                                setShowCustomMessage(true);
-
-                                setSelectedTokens({
-                                    from: { info: {}, amount: "" },
-                                    to: { info: {}, amount: "" },
-                                });
-                            }
-                        } catch (error) {
-                            setCustomMessage({
-                                message:
-                                    "Įvyko klaida, bandant keisti valiutas. Pabandykite dar kartą.",
-                                severity: "error",
-                            });
-                            setShowCustomMessage(true);
-                        }
-                    }
-                });
-            }
-        }
+        // if (
+        //     chainUrlNumber &&
+        //     selectedTokens.from.info.address &&
+        //     selectedTokens.to.info.address
+        // ) {
+        //     const amountToSell = getAmountToSell();
+        //     if (amountToSell > 0) {
+        //         axios({
+        //             method: "get",
+        //             url: `https://api.1inch.exchange/v3.0/${chainUrlNumber}/swap?fromTokenAddress=${selectedTokens.from.info.address}&toTokenAddress=${selectedTokens.to.info.address}&amount=${amountToSell}&fromAddress=${user.attributes.ethAddress}&slippage=0.5&referrerAddress=${process.env.REACT_APP_MY_WALLET_ADDRESS}&fee=1`,
+        //             headers: {
+        //                 "Content-Type": "application/json",
+        //             },
+        //             xsrfCookieName: "XSRF-TOKEN",
+        //             xsrfHeaderName: "X-XSRF-TOKEN",
+        //         }).then(async (response) => {
+        //             const data = response.data;
+        //             if (data) {
+        //                 try {
+        //                     const transaction = await web3.eth.sendTransaction(
+        //                         data.tx
+        //                     );
+        //                     if (transaction) {
+        //                         setCustomMessage({
+        //                             message:
+        //                                 "Valiutos sėkmingai iškeistos. Palaukite, kol šis veiksmas bus patvirtinas tinkle.",
+        //                             severity: "success",
+        //                         });
+        //                         setShowCustomMessage(true);
+        //                         setSelectedTokens({
+        //                             from: { info: {}, amount: "" },
+        //                             to: { info: {}, amount: "" },
+        //                         });
+        //                     }
+        //                 } catch (error) {
+        //                     setCustomMessage({
+        //                         message:
+        //                             "Įvyko klaida, bandant keisti valiutas. Pabandykite dar kartą.",
+        //                         severity: "error",
+        //                     });
+        //                     setShowCustomMessage(true);
+        //                 }
+        //             }
+        //         });
+        //     }
+        // }
     };
 
     const handleTokenSelectOpen = (side) => {
@@ -528,7 +517,7 @@ const SwapBox = () => {
                     <div className={classes.actionPart}>
                         <TradeItem
                             side="from"
-                            isAuthenticated={isAuthenticated}
+                            isAuthenticated={false}
                             activeToken={selectedTokens.from}
                             balance={
                                 balances[selectedTokens.from.info.address] || 0
@@ -551,7 +540,7 @@ const SwapBox = () => {
                         </div>
                         <TradeItem
                             side="to"
-                            isAuthenticated={isAuthenticated}
+                            isAuthenticated={false}
                             activeToken={selectedTokens.to}
                             balance={
                                 balances[selectedTokens.to.info.address] || 0
@@ -561,12 +550,11 @@ const SwapBox = () => {
                             }
                         />
 
-                        {!isAuthenticated ? (
+                        {!false ? (
                             <Button
                                 variant="contained"
                                 color="primary"
                                 className={classes.button}
-                                onClick={() => authenticate()}
                             >
                                 Prisijungti su pinigine
                             </Button>

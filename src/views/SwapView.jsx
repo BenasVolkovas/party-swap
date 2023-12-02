@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { makeStyles } from "@material-ui/core/styles";
 import axios from "axios";
-import { ByMoralis } from "react-moralis";
+// import { ByMoralis } from "react-moralis";
 import TopNav from "../components/TopNav";
 import SwapBox from "../components/SwapBox";
 import Alert from "@material-ui/lab/Alert";
@@ -46,7 +46,7 @@ const SwapView = () => {
     return (
         <>
             <TopNav />
-            {apiAvailable ? (
+            {true ? (
                 <SwapBox />
             ) : (
                 <Alert severity="error" className={classes.alert}>
@@ -54,7 +54,7 @@ const SwapView = () => {
                 </Alert>
             )}
             <div className={classes.bottomLogos}>
-                <ByMoralis variant="dark" width={150} />
+                {/* <ByMoralis variant="dark" width={150} /> */}
                 <img src={inchLogo} alt="Moralis logo" height="100%" />
             </div>
         </>
